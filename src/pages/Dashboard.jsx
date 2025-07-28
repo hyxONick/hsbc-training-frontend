@@ -80,7 +80,7 @@ export default function PortfolioDashboard() {
             <Button variant="ghost" size="icon"><Search className="h-4 w-4" /></Button>
             <Button variant="ghost" size="icon"><Bell className="h-4 w-4" /></Button>
             <Avatar>
-              <AvatarImage src="/placeholder.svg?height=32&width=32" />
+              <AvatarImage src="/UserAvatarSample.png?height=32&width=32" />
               <AvatarFallback>JD</AvatarFallback>
             </Avatar>
           </div>
