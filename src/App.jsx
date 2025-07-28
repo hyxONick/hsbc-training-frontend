@@ -1,7 +1,10 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Login from './pages/Login'
 import Register from './pages/Register'
-import Dashboard from './pages/Dashboard'
+import PortfolioDashboard from './pages/Dashboard'
+
+
+
 import Home from './pages/Home'
 
 function App() {
@@ -12,7 +15,9 @@ function App() {
       <Route path="/" element={isLoggedIn ? <Home /> : <Navigate to="/login" />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
-      <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/dashboard" element={<PortfolioDashboard />} />
+      <Route path="/dashboard" element={isLoggedIn ? <PortfolioDashboard /> : <Navigate to="/login" />}/>
+
     </Routes>
   )
 }

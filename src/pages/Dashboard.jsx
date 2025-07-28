@@ -19,6 +19,9 @@ import {
 import { PieChart, Pie, Cell, Legend, Tooltip, ResponsiveContainer } from "recharts"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts"
 
+const user = JSON.parse(localStorage.getItem('user'))
+
+
 const assetData = [
   { name: "Stocks", value: 147402 },
   { name: "Bonds", value: 79818 },
@@ -79,13 +82,18 @@ export default function PortfolioDashboard() {
           <div className="flex items-center space-x-4">
             <Button variant="ghost" size="icon"><Search className="h-4 w-4" /></Button>
             <Button variant="ghost" size="icon"><Bell className="h-4 w-4" /></Button>
-            <Avatar>
-              <AvatarImage src="/UserAvatarSample.png?height=32&width=32" />
-              <AvatarFallback>JD</AvatarFallback>
-            </Avatar>
+            <div className="flex items-center space-x-2">
+              <Avatar>
+                <AvatarImage src="/UserAvatarSample.png?height=32&width=32" />
+                <AvatarFallback>{user?.username?.[0]?.toUpperCase() || "U"}</AvatarFallback>
+              </Avatar>
+              <span className="text-sm font-medium text-gray-800">{user?.username}</span>
+            </div>
           </div>
+
         </div>
       </header>
+
 
       <div className="flex">
         {/* Sidebar */}
