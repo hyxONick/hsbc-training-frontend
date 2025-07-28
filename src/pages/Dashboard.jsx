@@ -17,6 +17,15 @@ import {
   Globe,
 } from "lucide-react"
 
+import { PieChart, Pie, Cell, Legend, Tooltip, ResponsiveContainer } from 'recharts'
+const assetData = [
+    { name: 'Stocks', value: 147402 },
+    { name: 'Bonds', value: 79818 },
+    { name: 'Cash', value: 18450 },
+]
+
+const COLORS = ['#3B82F6', '#10B981', '#FACC15']  // 蓝、绿、黄
+
 export default function PortfolioDashboard() {
   return (
     <div className="min-h-screen bg-gray-50">
@@ -152,45 +161,37 @@ export default function PortfolioDashboard() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Left Column - Asset Distribution & Profit Trends */}
               <div className="lg:col-span-2 space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Asset Distribution</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div>
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-medium flex items-center">
-                            <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
-                            Stocks
-                          </span>
-                          <span className="text-sm text-muted-foreground">$147,402 (60%)</span>
-                        </div>
-                        <Progress value={60} className="h-2" />
-                      </div>
-                      <div>
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-medium flex items-center">
-                            <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
-                            Bonds
-                          </span>
-                          <span className="text-sm text-muted-foreground">$79,818 (32.5%)</span>
-                        </div>
-                        <Progress value={32.5} className="h-2" />
-                      </div>
-                      <div>
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-medium flex items-center">
-                            <div className="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
-                            Cash
-                          </span>
-                          <span className="text-sm text-muted-foreground">$18,450 (7.5%)</span>
-                        </div>
-                        <Progress value={7.5} className="h-2" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+              
+
+            <Card>
+            <CardHeader>
+                <CardTitle>Asset Distribution</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <div className="h-80 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                    <Pie
+                        data={assetData}
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={80}
+                        dataKey="value"
+                        nameKey="name"
+                        label
+                    >
+                        {assetData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend verticalAlign="bottom" height={36} />
+                    </PieChart>
+                </ResponsiveContainer>
+                </div>
+            </CardContent>
+            </Card>
+
 
                 <Card>
                   <CardHeader>
