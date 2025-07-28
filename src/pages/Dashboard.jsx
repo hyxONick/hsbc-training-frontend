@@ -18,10 +18,21 @@ import {
 } from "lucide-react"
 
 import { PieChart, Pie, Cell, Legend, Tooltip, ResponsiveContainer } from 'recharts'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts'
+
 const assetData = [
     { name: 'Stocks', value: 147402 },
     { name: 'Bonds', value: 79818 },
     { name: 'Cash', value: 18450 },
+]
+
+const profitTrendData = [
+  { month: "Jan", profit: 12.3 },
+  { month: "Feb", profit: 8.2 },
+  { month: "Mar", profit: -15.1 },
+  { month: "Apr", profit: 21.8 },
+  { month: "May", profit: -7.4 },
+  { month: "Jun", profit: 13.6 },
 ]
 
 const COLORS = ['#3B82F6', '#10B981', '#FACC15']  // 蓝、绿、黄
@@ -198,32 +209,20 @@ export default function PortfolioDashboard() {
                     <CardTitle>Profit Trends (Last 6 Months)</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="h-64 flex items-end justify-between space-x-2">
-                      {[
-                        { month: "Jan", value: 85, profit: 12.3 },
-                        { month: "Feb", value: 92, profit: 8.2 },
-                        { month: "Mar", value: 78, profit: -15.1 },
-                        { month: "Apr", value: 95, profit: 21.8 },
-                        { month: "May", value: 88, profit: -7.4 },
-                        { month: "Jun", value: 100, profit: 13.6 },
-                      ].map((item, index) => (
-                        <div key={index} className="flex flex-col items-center flex-1">
-                          <div
-                            className={`w-full rounded-t ${item.profit > 0 ? "bg-green-500" : "bg-red-500"} mb-2`}
-                            style={{ height: `${item.value}%` }}
-                          ></div>
-                          <span className="text-xs text-muted-foreground">{item.month}</span>
-                          <span
-                            className={`text-xs font-medium ${item.profit > 0 ? "text-green-600" : "text-red-600"}`}
-                          >
-                            {item.profit > 0 ? "+" : ""}
-                            {item.profit}%
-                          </span>
-                        </div>
-                      ))}
+                    <div className="h-64 w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={profitTrendData}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="month" />
+                          <YAxis />
+                          <Tooltip />
+                          <Line type="monotone" dataKey="profit" stroke="#10B981" strokeWidth={2} dot={{ r: 4 }} />
+                        </LineChart>
+                      </ResponsiveContainer>
                     </div>
                   </CardContent>
                 </Card>
+
               </div>
 
               {/* Right Column */}
