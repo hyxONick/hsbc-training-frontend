@@ -15,6 +15,8 @@ export const profitTrendData = [
 ];
 
 export const netWorth = 245670;
+export const netWorth_lm = 200000;
+export const per_netWorth = ((netWorth - netWorth_lm) / netWorth_lm) * 100;
 
 export const stockData = [
   { symbol: "AAPL", name: "Apple Inc.", value: 15240, change: 2.4 },

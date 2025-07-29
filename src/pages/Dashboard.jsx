@@ -28,6 +28,8 @@ import {
   bondData,
   marketData,
   netWorth,
+  netWorth_lm,
+  per_netWorth,
   COLORS
 } from "../constants/dashboardData"
 
@@ -101,19 +103,19 @@ export default function PortfolioDashboard() {
             {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
               <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardHeader className="text-sm font-medium text-left flex-1">
                   <CardTitle className="text-sm font-medium">Total Portfolio Value</CardTitle>
                   <DollarSign className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">${netWorth.toLocaleString()}</div>
                   <p className="text-xs text-green-600 flex items-center">
-                    <ArrowUpRight className="h-3 w-3 mr-1" />+12.5% from last month
+                    <ArrowUpRight className="h-3 w-3 mr-1" /> +{per_netWorth.toFixed(2)}%  from last month
                   </p>
                 </CardContent>
               </Card>
               <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardHeader className="text-sm font-medium text-left flex-1">
                   <CardTitle className="text-sm font-medium">Today's Gain/Loss</CardTitle>
                   <Activity className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
@@ -125,7 +127,7 @@ export default function PortfolioDashboard() {
                 </CardContent>
               </Card>
               <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardHeader className="text-sm font-medium text-left flex-1">
                   <CardTitle className="text-sm font-medium">Available Cash</CardTitle>
                   <DollarSign className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
@@ -135,7 +137,7 @@ export default function PortfolioDashboard() {
                 </CardContent>
               </Card>
               <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardHeader className="text-sm font-medium text-left flex-1">
                   <CardTitle className="text-sm font-medium">Total Return</CardTitle>
                   <TrendingUp className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
