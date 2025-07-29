@@ -2,7 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import PortfolioDashboard from './pages/Dashboard'
-
+import MarketInformation from './pages/MarketInformation'
 
 
 import Home from './pages/Home'
@@ -17,7 +17,7 @@ function App() {
       <Route path="/register" element={<Register />} />
       <Route path="/dashboard" element={<PortfolioDashboard />} />
       <Route path="/dashboard" element={isLoggedIn ? <PortfolioDashboard /> : <Navigate to="/login" />}/>
-
+      <Route path="/market-information" element={isLoggedIn ? <MarketInformation /> : <Navigate to="/login" />} />
     </Routes>
   )
 }
