@@ -27,11 +27,28 @@ import {
   stockData,
   bondData,
   marketData,
-  netWorth,
-  netWorth_lm,
-  per_netWorth,
   COLORS
 } from "../constants/dashboardData"
+
+import { dashboardData } from "../constants/dashboardData"
+
+const {
+  stockNW, stockNW_lm, stockNW_ld,
+  bondNW, bondNW_lm, bondNW_ld,
+  cashNW, cashNW_lm, cashNW_ld,
+  invest_amount
+} = dashboardData;
+
+const netWorth = stockNW + bondNW + cashNW;
+const netWorth_lm = stockNW_lm + bondNW_lm + cashNW_lm;
+const netWorth_ld = stockNW_ld + bondNW_ld + cashNW_ld;
+
+const per_netWorth = ((netWorth - netWorth_lm) / netWorth_lm) * 100;
+const today_gain = netWorth - netWorth_ld;
+const today_gain_pct = ((netWorth - netWorth_ld) / netWorth_ld) * 100;
+const available_cash_pct = (cashNW / netWorth) * 100;
+const total_return_pct = ((netWorth - invest_amount) / invest_amount) * 100;
+
 
 export default function PortfolioDashboard() {
   const [assetType, setAssetType] = useState("stocks")
@@ -102,6 +119,7 @@ export default function PortfolioDashboard() {
 
             {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              {/* 总资产 */}
               <Card>
                 <CardHeader className="text-sm font-medium text-left flex-1">
                   <CardTitle className="text-sm font-medium">Total Portfolio Value</CardTitle>
@@ -110,39 +128,51 @@ export default function PortfolioDashboard() {
                 <CardContent>
                   <div className="text-2xl font-bold">${netWorth.toLocaleString()}</div>
                   <p className="text-xs text-green-600 flex items-center">
-                    <ArrowUpRight className="h-3 w-3 mr-1" /> +{per_netWorth.toFixed(2)}%  from last month
+                    <ArrowUpRight className="h-3 w-3 mr-1" />
+                    {per_netWorth >= 0 ? "+" : ""}{per_netWorth.toFixed(2)}% from last month
                   </p>
                 </CardContent>
               </Card>
+
+              {/* 今日盈亏 */}
               <Card>
                 <CardHeader className="text-sm font-medium text-left flex-1">
                   <CardTitle className="text-sm font-medium">Today's Gain/Loss</CardTitle>
                   <Activity className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-green-600">+$2,340</div>
-                  <p className="text-xs text-green-600 flex items-center">
-                    <ArrowUpRight className="h-3 w-3 mr-1" />+0.96% today
+                  <div className={`text-2xl font-bold ${today_gain >= 0 ? "text-green-600" : "text-red-600"}`}>
+                    {today_gain >= 0 ? "+" : "-"}${Math.abs(today_gain).toLocaleString()}
+                  </div>
+                  <p className={`text-xs flex items-center ${today_gain_pct >= 0 ? "text-green-600" : "text-red-600"}`}>
+                    {today_gain_pct >= 0 ? <ArrowUpRight className="h-3 w-3 mr-1" /> : <ArrowDownRight className="h-3 w-3 mr-1" />}
+                    {today_gain_pct >= 0 ? "+" : ""}{today_gain_pct.toFixed(2)}% today
                   </p>
                 </CardContent>
               </Card>
+
+              {/* 现金 */}
               <Card>
                 <CardHeader className="text-sm font-medium text-left flex-1">
                   <CardTitle className="text-sm font-medium">Available Cash</CardTitle>
                   <DollarSign className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">$18,450</div>
-                  <p className="text-xs text-muted-foreground">7.5% of portfolio</p>
+                  <div className="text-2xl font-bold">${cashNW.toLocaleString()}</div>
+                  <p className="text-xs text-muted-foreground">{available_cash_pct.toFixed(1)}% of portfolio</p>
                 </CardContent>
               </Card>
+
+              {/* 总收益 */}
               <Card>
                 <CardHeader className="text-sm font-medium text-left flex-1">
                   <CardTitle className="text-sm font-medium">Total Return</CardTitle>
                   <TrendingUp className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-green-600">+18.7%</div>
+                  <div className={`text-2xl font-bold ${total_return_pct >= 0 ? "text-green-600" : "text-red-600"}`}>
+                    {total_return_pct >= 0 ? "+" : ""}{total_return_pct.toFixed(1)}%
+                  </div>
                   <p className="text-xs text-muted-foreground">Since inception</p>
                 </CardContent>
               </Card>
@@ -236,18 +266,30 @@ export default function PortfolioDashboard() {
                 {/* Stocks / Bonds Switcher */}
                 <Card>
                   <CardHeader>
-                    <CardTitle>{assetType === "stocks" ? "Top Holdings Performance" : "Bond Performance"}</CardTitle>
+                    <CardTitle>
+                      {assetType === "stocks" ? "Stocks Performance" : "Bond Performance"}
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="flex space-x-2 mb-4">
-                      <Button variant={assetType === "stocks" ? "default" : "outline"} onClick={() => setAssetType("stocks")}>Stocks</Button>
-                      <Button variant={assetType === "bonds" ? "default" : "outline"} onClick={() => setAssetType("bonds")}>Bonds</Button>
+                      <Button
+                        variant={assetType === "stocks" ? "default" : "outline"}
+                        onClick={() => setAssetType("stocks")}
+                      >
+                        Stocks
+                      </Button>
+                      <Button
+                        variant={assetType === "bonds" ? "default" : "outline"}
+                        onClick={() => setAssetType("bonds")}
+                      >
+                        Bonds
+                      </Button>
                     </div>
 
-                    {assetType === "stocks" ? (
+                    {assetType === "stocks" && (
                       <div className="space-y-3">
-                        {stockData.map((stock, idx) => (
-                          <div key={idx} className="flex items-center justify-between">
+                        {stockData.map((stock) => (
+                          <div key={stock.symbol} className="flex items-center justify-between">
                             <div>
                               <span className="text-sm font-medium">{stock.symbol}</span>
                               <p className="text-xs text-muted-foreground">{stock.name}</p>
@@ -259,20 +301,28 @@ export default function PortfolioDashboard() {
                                 ) : (
                                   <ArrowDownRight className="h-3 w-3 text-red-600 mr-1" />
                                 )}
-                                <span className={`text-sm font-medium ${stock.change >= 0 ? "text-green-600" : "text-red-600"}`}>
+                                <span
+                                  className={`text-sm font-medium ${
+                                    stock.change >= 0 ? "text-green-600" : "text-red-600"
+                                  }`}
+                                >
                                   {stock.change >= 0 ? "+" : ""}
                                   {stock.change}%
                                 </span>
                               </div>
-                              <span className="text-xs text-muted-foreground">${stock.value.toLocaleString()}</span>
+                              <span className="text-xs text-muted-foreground">
+                                ${stock.value.toLocaleString()}
+                              </span>
                             </div>
                           </div>
                         ))}
                       </div>
-                    ) : (
+                    )}
+
+                    {assetType === "bonds" && (
                       <div className="space-y-3">
-                        {bondData.map((bond, idx) => (
-                          <div key={idx} className="flex items-center justify-between">
+                        {bondData.map((bond) => (
+                          <div key={bond.name} className="flex items-center justify-between">
                             <div>
                               <span className="text-sm font-medium">{bond.name}</span>
                               <p className="text-xs text-muted-foreground">{bond.yield} Yield</p>
@@ -284,7 +334,11 @@ export default function PortfolioDashboard() {
                                 ) : (
                                   <ArrowDownRight className="h-3 w-3 text-red-600 mr-1" />
                                 )}
-                                <span className={`text-sm font-medium ${bond.change >= 0 ? "text-green-600" : "text-red-600"}`}>
+                                <span
+                                  className={`text-sm font-medium ${
+                                    bond.change >= 0 ? "text-green-600" : "text-red-600"
+                                  }`}
+                                >
                                   {bond.change >= 0 ? "+" : ""}
                                   {bond.change}%
                                 </span>
@@ -296,6 +350,7 @@ export default function PortfolioDashboard() {
                     )}
                   </CardContent>
                 </Card>
+
               </div>
             </div>
           </div>
