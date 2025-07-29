@@ -67,7 +67,7 @@ export default function MarketInformation() {
             <a href="/asset-detail" className="flex items-center space-x-3 text-gray-700 p-2 rounded-lg hover:bg-gray-100">
               <FileText className="h-4 w-4" /><span>Asset Detail</span>
             </a>
-            <a href="#" className="flex items-center space-x-3 text-gray-700 p-2 rounded-lg hover:bg-gray-100">
+            <a href="/profit-analysis" className="flex items-center space-x-3 text-gray-700 p-2 rounded-lg hover:bg-gray-100">
               <TrendingUp className="h-4 w-4" /><span>Profit Analysis</span>
             </a>
             <a href="#" className="flex items-center space-x-3 text-gray-700 p-2 rounded-lg hover:bg-gray-100">
