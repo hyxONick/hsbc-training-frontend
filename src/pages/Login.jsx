@@ -11,9 +11,11 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     try {
-      const res = await api.post('/login', { username, password })
+      const res = await api.post('users/login', { username, password })
       localStorage.setItem('token', res.data.token)
       localStorage.setItem('user', JSON.stringify(res.data.user))
+      const user = JSON.parse(localStorage.getItem('user'));
+      console.log('#### user ####', user);
       navigate('/dashboard')
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed')

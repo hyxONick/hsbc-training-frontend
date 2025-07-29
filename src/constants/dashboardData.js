@@ -1,3 +1,23 @@
+import api from '../api';
+
+const user = JSON.parse(localStorage.getItem('user'));
+const userId = user?.id;
+
+const getInvestAmount = async () => {
+  try {
+    const res = await api.get(`/statistics/users/${userId}/summary`);
+    const totalInvestment = res.data.totalInvestment;
+
+    console.log('💰 用户投入本金（总充值金额）：', totalInvestment);
+    return totalInvestment;
+  } catch (error) {
+    console.error('❌ 获取用户投入本金失败：', error.response?.data || error.message);
+  }
+};
+
+getInvestAmount();
+
+
 // 投入本金（总充值金额）
 export const investAmount = 20000
 

@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect} from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "/src/components/ui/card"
 import { Button } from "/src/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "/src/components/ui/avatar"
@@ -30,7 +30,7 @@ import {
   COLORS
 } from "../constants/dashboardData"
 
-import { dashboardData } from "../constants/dashboardData"
+import { dashboardData} from "../constants/dashboardData"
 
 const {
   stockNW, stockNW_lm, stockNW_ld,
