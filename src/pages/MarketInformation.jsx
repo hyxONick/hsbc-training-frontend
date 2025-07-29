@@ -64,19 +64,19 @@ export default function MarketInformation() {
             <a href="/dashboard" className="flex items-center space-x-3 text-gray-700 p-2 rounded-lg hover:bg-gray-100">
               <LayoutDashboard className="h-4 w-4" /><span>Dashboard</span>
             </a>
-            <a href="#" className="flex items-center space-x-3 text-gray-700 p-2 rounded-lg hover:bg-gray-100">
+            <a href="/asset-detail" className="flex items-center space-x-3 text-gray-700 p-2 rounded-lg hover:bg-gray-100">
               <FileText className="h-4 w-4" /><span>Asset Detail</span>
             </a>
-            <a href="#" className="flex items-center space-x-3 text-gray-700 p-2 rounded-lg hover:bg-gray-100">
+            <a href="/profit-analysis" className="flex items-center space-x-3 text-gray-700 p-2 rounded-lg hover:bg-gray-100">
               <TrendingUp className="h-4 w-4" /><span>Profit Analysis</span>
             </a>
             <a href="#" className="flex items-center space-x-3 text-gray-700 p-2 rounded-lg hover:bg-gray-100">
               <Briefcase className="h-4 w-4" /><span>Portfolio Detail</span>
             </a>
-            <a href="/market" className="flex items-center space-x-3 text-blue-600 bg-blue-50 p-2 rounded-lg">
+            <a href="/market-information" className="flex items-center space-x-3 text-blue-600 bg-blue-50 p-2 rounded-lg">
               <Globe className="h-4 w-4" /><span>Market Information</span>
             </a>
-            <a href="#" className="flex items-center space-x-3 text-gray-700 p-2 rounded-lg hover:bg-gray-100">
+            <a href="/settings" className="flex items-center space-x-3 text-gray-700 p-2 rounded-lg hover:bg-gray-100">
               <Settings className="h-4 w-4" /><span>Settings</span>
             </a>
           </nav>
@@ -179,22 +179,44 @@ export default function MarketInformation() {
 
             {/* Stock Highlights */}
             <Card>
-              <CardHeader><CardTitle>Stock Quotes</CardTitle></CardHeader>
-              <CardContent className="space-y-3">
-                {stockQuotes.map((stock, i) => (
-                  <div key={i} className="flex justify-between items-center">
-                    <div>
-                      <p className="font-medium text-sm">{stock.symbol}</p>
-                      <p className="text-xs text-muted-foreground">{stock.name}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-semibold">${stock.price}</p>
-                      <p className={`text-xs ${stock.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        {stock.change >= 0 ? '+' : ''}{stock.change}%
-                      </p>
-                    </div>
-                  </div>
-                ))}
+              <CardHeader>
+                <CardTitle>Stock Quotes</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Symbol</th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Change %</th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Change</th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Speed</th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Volume</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {stockQuotes.map((stock, i) => (
+                        <tr key={i} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{stock.symbol}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{stock.name}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${stock.price.toFixed(2)}</td>
+                          <td className={`px-6 py-4 whitespace-nowrap text-sm ${stock.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            {stock.change >= 0 ? '+' : ''}{stock.change}%
+                          </td>
+                          <td className={`px-6 py-4 whitespace-nowrap text-sm ${stock.changeAmount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            {stock.changeAmount >= 0 ? '+' : ''}{stock.changeAmount.toFixed(2)}
+                          </td>
+                          <td className={`px-6 py-4 whitespace-nowrap text-sm ${stock.speed >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            {stock.speed >= 0 ? '+' : ''}{stock.speed}%
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{stock.volume}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </CardContent>
             </Card>
           </div>
