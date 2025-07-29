@@ -70,7 +70,7 @@ export default function MarketInformation() {
             <a href="/profit-analysis" className="flex items-center space-x-3 text-gray-700 p-2 rounded-lg hover:bg-gray-100">
               <TrendingUp className="h-4 w-4" /><span>Profit Analysis</span>
             </a>
-            <a href="#" className="flex items-center space-x-3 text-gray-700 p-2 rounded-lg hover:bg-gray-100">
+            <a href="/portfolio-detail" className="flex items-center space-x-3 text-gray-700 p-2 rounded-lg hover:bg-gray-100">
               <Briefcase className="h-4 w-4" /><span>Portfolio Detail</span>
             </a>
             <a href="/market-information" className="flex items-center space-x-3 text-blue-600 bg-blue-50 p-2 rounded-lg">

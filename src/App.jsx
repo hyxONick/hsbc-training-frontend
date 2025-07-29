@@ -6,7 +6,7 @@ import MarketInformation from './pages/MarketInformation'
 import Settings from './pages/Settings'
 import AssetDetail from './pages/AssetDetail'
 import ProfitAnalysis from './pages/ProfitAnalysis'
-
+import PortfolioDetail from './pages/PortfolioDetail'
 
 import Home from './pages/Home'
 
@@ -24,7 +24,7 @@ function App() {
       <Route path="/settings" element={isLoggedIn ? <Settings /> : <Navigate to="/login" />} />
       <Route path="/asset-detail" element={isLoggedIn ? <AssetDetail /> : <Navigate to="/login" />} />
       <Route path="/profit-analysis" element={isLoggedIn ? <ProfitAnalysis /> : <Navigate to="/login" />} />
-      
+      <Route path="/portfolio-detail" element={isLoggedIn ? <PortfolioDetail /> : <Navigate to="/login" />} />
     </Routes>
   )
 }
