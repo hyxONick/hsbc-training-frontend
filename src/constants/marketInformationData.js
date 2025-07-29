@@ -49,11 +49,51 @@ export const globalIndices = [
 
 // 个股行情
 export const stockQuotes = [
-  { symbol: 'AAPL', name: 'Apple Inc.', value: 152.34, change: 1.2 },
-  { symbol: 'MSFT', name: 'Microsoft Corp.', value: 318.56, change: -0.8 },
-  { symbol: 'GOOGL', name: 'Alphabet Inc.', value: 125.67, change: 0.4 },
-  { symbol: 'TSLA', name: 'Tesla Inc.', value: 652.78, change: 3.1 },
-  { symbol: 'NVDA', name: 'NVIDIA Corp.', value: 842.12, change: 2.7 },
+  { 
+    symbol: 'AAPL', 
+    name: 'Apple Inc.', 
+    price: 152.34, 
+    change: 1.2, 
+    changeAmount: 1.83, 
+    speed: 0.3, 
+    volume: '12.5B' 
+  },
+  { 
+    symbol: 'MSFT', 
+    name: 'Microsoft Corp.', 
+    price: 318.56, 
+    change: -0.8, 
+    changeAmount: -2.57, 
+    speed: -0.1, 
+    volume: '8.7B' 
+  },
+  { 
+    symbol: 'GOOGL', 
+    name: 'Alphabet Inc.', 
+    price: 125.67, 
+    change: 0.4, 
+    changeAmount: 0.50, 
+    speed: 0.2, 
+    volume: '5.2B' 
+  },
+  { 
+    symbol: 'TSLA', 
+    name: 'Tesla Inc.', 
+    price: 652.78, 
+    change: 3.1, 
+    changeAmount: 20.21, 
+    speed: 1.2, 
+    volume: '15.3B' 
+  },
+  { 
+    symbol: 'NVDA', 
+    name: 'NVIDIA Corp.', 
+    price: 842.12, 
+    change: 2.7, 
+    changeAmount: 22.74, 
+    speed: 0.9, 
+    volume: '18.9B' 
+  },
 ]
 
 export const marketRating = {
