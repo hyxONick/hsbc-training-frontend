@@ -1,60 +1,97 @@
-import { useState, useEffect} from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "/src/components/ui/card"
 import { Button } from "/src/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "/src/components/ui/avatar"
 import {
-  Settings,
-  Bell,
-  Search,
-  LayoutDashboard,
-  FileText,
-  TrendingUp,
-  Briefcase,
-  DollarSign,
-  Activity,
-  ArrowUpRight,
-  ArrowDownRight,
-  Globe,
+  Settings, Bell, Search, LayoutDashboard, FileText, TrendingUp,
+  Briefcase, DollarSign, Activity, ArrowUpRight, ArrowDownRight, Globe,
 } from "lucide-react"
 import { PieChart, Pie, Cell, Legend, Tooltip, ResponsiveContainer } from "recharts"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts"
+import { fetchTopAssets, fetchUserSummary, fetchUserMonthlyProfit } from '../api/statistics'
+
+import { marketData } from '../constants/dashboardData'
 
 const user = JSON.parse(localStorage.getItem('user'))
-
-import {
-  assetData,
-  profitTrendData,
-  stockData,
-  bondData,
-  marketData,
-  COLORS,
-  initDashboardData
-} from "../constants/dashboardData"
-
-import { dashboardData} from "../constants/dashboardData"
-
-//await initDashboardData();
-
-const {
-  stockNW, stockNW_lm, stockNW_ld,
-  bondNW, bondNW_lm, bondNW_ld,
-  cashNW, cashNW_lm, cashNW_ld,
-  invest_amount
-} = dashboardData;
-
-const netWorth = stockNW + bondNW + cashNW;
-const netWorth_lm = stockNW_lm + bondNW_lm + cashNW_lm;
-const netWorth_ld = stockNW_ld + bondNW_ld + cashNW_ld;
-
-const per_netWorth = ((netWorth - netWorth_lm) / netWorth_lm) * 100;
-const today_gain = netWorth - netWorth_ld;
-const today_gain_pct = ((netWorth - netWorth_ld) / netWorth_ld) * 100;
-const available_cash_pct = (cashNW / netWorth) * 100;
-const total_return_pct = ((netWorth - invest_amount) / invest_amount) * 100;
-
+const COLORS = ["#10B981", "#3B82F6", "#F59E0B"]
 
 export default function PortfolioDashboard() {
   const [assetType, setAssetType] = useState("stocks")
+
+  // 🔥 state
+  const [summary, setSummary] = useState({
+    current: { stock: 0, bond: 0, cash: 0 },
+    monthly: { stock: 0, bond: 0, cash: 0 },
+    yesterday: { stock: 0, bond: 0, cash: 0 },
+    totalInvestment: 0
+  })
+  const [monthlyProfit, setMonthlyProfit] = useState(null)
+  const [topAssets, setTopAssets] = useState([])
+
+  useEffect(() => {
+    if (!user) return
+
+    // 1️⃣ 用户净值统计
+    fetchUserSummary(user.id).then(setSummary)
+
+    // 2️⃣ 月度收益（默认 6 个月）
+    fetchUserMonthlyProfit(user.id, 6).then(setMonthlyProfit)
+
+    // 3️⃣ 股票 & 债券 Top 数据
+    fetchTopAssets(5).then(setTopAssets)
+  }, [])
+
+  // ⏳ Loading 状态
+  if (!summary || !monthlyProfit) {
+    return <div className="p-6 text-gray-600">Loading dashboard...</div>
+  }
+
+  // ✅ 处理 summary 数据
+  const stockNW = summary.current.stock || 0
+  const bondNW = summary.current.bond || 0
+  const cashNW = summary.current.cash || 0
+
+  const stockNW_lm = summary.monthly.stock || 0
+  const bondNW_lm = summary.monthly.bond || 0
+  const cashNW_lm = summary.monthly.cash || 0
+
+  const stockNW_ld = summary.yesterday.stock || 0
+  const bondNW_ld = summary.yesterday.bond || 0
+  const cashNW_ld = summary.yesterday.cash || 0
+
+  const invest_amount = summary.totalInvestment || 0
+
+  // 📊 计算指标
+  const netWorth = stockNW + bondNW + cashNW
+  const netWorth_lm = stockNW_lm + bondNW_lm + cashNW_lm
+  const netWorth_ld = stockNW_ld + bondNW_ld + cashNW_ld
+
+  const per_netWorth = ((netWorth - netWorth_lm) / (netWorth_lm || 1)) * 100
+  const today_gain = netWorth - netWorth_ld
+  const today_gain_pct = ((netWorth - netWorth_ld) / (netWorth_ld || 1)) * 100
+  const available_cash_pct = (cashNW / (netWorth || 1)) * 100
+  const total_return_pct = ((netWorth - invest_amount) / (invest_amount || 1)) * 100
+
+  // 🥧 饼图资产分布
+  const assetData = [
+    { name: "Stocks", value: stockNW },
+    { name: "Bonds", value: bondNW },
+    { name: "Cash", value: cashNW }
+  ]
+
+  // 📈 月度收益趋势
+  const profitTrendData = monthlyProfit.stockProfit6M.map((item, i) => ({
+    month: item.month,
+    profit:
+      (item.profit) +
+      (monthlyProfit.bondProfit6M[i].profit) +
+      (monthlyProfit.cashProfit6M[i].profit)
+  }))
+
+  // 🔥 股票 & 债券排行榜
+  console.log('topAssets.filter', topAssets)
+  const stockData = topAssets.topStocks
+  const bondData = topAssets.topBonds
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -75,19 +112,17 @@ export default function PortfolioDashboard() {
             <Button variant="ghost" size="icon"><Bell className="h-4 w-4" /></Button>
             <div className="flex items-center space-x-2">
               <Avatar>
-                <AvatarImage src="/UserAvatarSample.png?height=32&width=32" />
+                <AvatarImage src="/UserAvatarSample.png" />
                 <AvatarFallback>{user?.username?.[0]?.toUpperCase() || "U"}</AvatarFallback>
               </Avatar>
               <span className="text-sm font-medium text-gray-800">{user?.username}</span>
             </div>
           </div>
-
         </div>
       </header>
 
-
       <div className="flex">
-        {/* Sidebar */}
+        {/* Sidebar 保持不动 */}
         <aside className="w-64 bg-white border-r border-gray-200 min-h-screen p-6">
           <nav className="space-y-2">
             <a href="#" className="flex items-center space-x-3 text-blue-600 bg-blue-50 p-2 rounded-lg">
@@ -96,7 +131,7 @@ export default function PortfolioDashboard() {
             <a href="/asset-detail" className="flex items-center space-x-3 text-gray-700 p-2 rounded-lg hover:bg-gray-100">
               <FileText className="h-4 w-4" /><span>Asset Detail</span>
             </a>
-            <a href="profit-analysis" className="flex items-center space-x-3 text-gray-700 p-2 rounded-lg hover:bg-gray-100">
+            <a href="/profit-analysis" className="flex items-center space-x-3 text-gray-700 p-2 rounded-lg hover:bg-gray-100">
               <TrendingUp className="h-4 w-4" /><span>Profit Analysis</span>
             </a>
             <a href="/portfolio-detail" className="flex items-center space-x-3 text-gray-700 p-2 rounded-lg hover:bg-gray-100">
@@ -120,14 +155,11 @@ export default function PortfolioDashboard() {
               <p className="text-gray-600">Welcome back, here's your portfolio overview</p>
             </div>
 
-            {/* Summary Cards */}
+            {/* 🔥 顶部 4 张卡片 */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
               {/* 总资产 */}
               <Card>
-                <CardHeader className="text-sm font-medium text-left flex-1">
-                  <CardTitle className="text-sm font-medium">Total Portfolio Value</CardTitle>
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
+                <CardHeader><CardTitle>Total Portfolio Value</CardTitle></CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">${netWorth.toLocaleString()}</div>
                   <p className="text-xs text-green-600 flex items-center">
@@ -139,27 +171,21 @@ export default function PortfolioDashboard() {
 
               {/* 今日盈亏 */}
               <Card>
-                <CardHeader className="text-sm font-medium text-left flex-1">
-                  <CardTitle className="text-sm font-medium">Today's Gain/Loss</CardTitle>
-                  <Activity className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
+                <CardHeader><CardTitle>Today's Gain/Loss</CardTitle></CardHeader>
                 <CardContent>
                   <div className={`text-2xl font-bold ${today_gain >= 0 ? "text-green-600" : "text-red-600"}`}>
                     {today_gain >= 0 ? "+" : "-"}${Math.abs(today_gain).toLocaleString()}
                   </div>
                   <p className={`text-xs flex items-center ${today_gain_pct >= 0 ? "text-green-600" : "text-red-600"}`}>
                     {today_gain_pct >= 0 ? <ArrowUpRight className="h-3 w-3 mr-1" /> : <ArrowDownRight className="h-3 w-3 mr-1" />}
-                    {today_gain_pct >= 0 ? "+" : ""}{today_gain_pct.toFixed(2)}% today
+                    {today_gain_pct.toFixed(2)}% today
                   </p>
                 </CardContent>
               </Card>
 
               {/* 现金 */}
               <Card>
-                <CardHeader className="text-sm font-medium text-left flex-1">
-                  <CardTitle className="text-sm font-medium">Available Cash</CardTitle>
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
+                <CardHeader><CardTitle>Available Cash</CardTitle></CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">${cashNW.toLocaleString()}</div>
                   <p className="text-xs text-muted-foreground">{available_cash_pct.toFixed(1)}% of portfolio</p>
@@ -168,10 +194,7 @@ export default function PortfolioDashboard() {
 
               {/* 总收益 */}
               <Card>
-                <CardHeader className="text-sm font-medium text-left flex-1">
-                  <CardTitle className="text-sm font-medium">Total Return</CardTitle>
-                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
+                <CardHeader><CardTitle>Total Return</CardTitle></CardHeader>
                 <CardContent>
                   <div className={`text-2xl font-bold ${total_return_pct >= 0 ? "text-green-600" : "text-red-600"}`}>
                     {total_return_pct >= 0 ? "+" : ""}{total_return_pct.toFixed(1)}%
@@ -181,11 +204,10 @@ export default function PortfolioDashboard() {
               </Card>
             </div>
 
-            {/* Main Content Grid */}
+            {/* 📊 饼图 & 收益趋势 */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Left Column */}
+              {/* 左列：资产分布 + 收益趋势 */}
               <div className="lg:col-span-2 space-y-6">
-                {/* Asset Distribution */}
                 <Card>
                   <CardHeader><CardTitle>Asset Distribution</CardTitle></CardHeader>
                   <CardContent>
@@ -205,7 +227,6 @@ export default function PortfolioDashboard() {
                   </CardContent>
                 </Card>
 
-                {/* Profit Trends */}
                 <Card>
                   <CardHeader><CardTitle>Profit Trends (Last 6 Months)</CardTitle></CardHeader>
                   <CardContent>
@@ -224,7 +245,7 @@ export default function PortfolioDashboard() {
                 </Card>
               </div>
 
-              {/* Right Column */}
+              {/* 右列：Stock/Bond */}
               <div className="space-y-6">
                 {/* Net Worth */}
                 <Card>
@@ -264,15 +285,9 @@ export default function PortfolioDashboard() {
                     </div>
                   </CardContent>
                 </Card>
-
-
-                {/* Stocks / Bonds Switcher */}
+                {/* Stocks / Bonds 切换 */}
                 <Card>
-                  <CardHeader>
-                    <CardTitle>
-                      {assetType === "stocks" ? "Stocks Performance" : "Bond Performance"}
-                    </CardTitle>
-                  </CardHeader>
+                  <CardHeader><CardTitle>{assetType === "stocks" ? "Stocks Performance" : "Bond Performance"}</CardTitle></CardHeader>
                   <CardContent>
                     <div className="flex space-x-2 mb-4">
                       <Button
@@ -291,59 +306,56 @@ export default function PortfolioDashboard() {
 
                     {assetType === "stocks" && (
                       <div className="space-y-3">
-                        {stockData.map((stock) => (
-                          <div key={stock.symbol} className="flex items-center justify-between">
+                        {stockData.map((stock, idx) => (
+                          <div key={stock?.assetCode || idx} className="flex items-center justify-between">
                             <div>
-                              <span className="text-sm font-medium">{stock.symbol}</span>
-                              <p className="text-xs text-muted-foreground">{stock.name}</p>
+                              <span className="text-sm font-medium">{stock?.assetCode || 'N/A'}</span>
+                              <p className="text-xs text-muted-foreground">{stock?.name || 'No name'}</p>
                             </div>
                             <div className="text-right">
                               <div className="flex items-center">
-                                {stock.change >= 0 ? (
+                                {stock?.change >= 0 ? (
                                   <ArrowUpRight className="h-3 w-3 text-green-600 mr-1" />
                                 ) : (
                                   <ArrowDownRight className="h-3 w-3 text-red-600 mr-1" />
                                 )}
                                 <span
-                                  className={`text-sm font-medium ${
-                                    stock.change >= 0 ? "text-green-600" : "text-red-600"
-                                  }`}
+                                  className={`text-sm font-medium ${stock?.growth >= 0 ? "text-green-600" : "text-red-600"
+                                    }`}
                                 >
-                                  {stock.change >= 0 ? "+" : ""}
-                                  {stock.change}%
+                                  {stock?.growth.toFixed(2) >= 0 ? "+" : ""}
+                                  {stock?.growth.toFixed(2) ?? 0}%
                                 </span>
                               </div>
                               <span className="text-xs text-muted-foreground">
-                                ${stock.value.toLocaleString()}
+                                ${stock?.price?.toLocaleString?.() || 0}
                               </span>
                             </div>
                           </div>
                         ))}
+
                       </div>
                     )}
 
                     {assetType === "bonds" && (
                       <div className="space-y-3">
                         {bondData.map((bond) => (
-                          <div key={bond.name} className="flex items-center justify-between">
+                          <div key={bond.assetCode} className="flex items-center justify-between">
                             <div>
-                              <span className="text-sm font-medium">{bond.name}</span>
-                              <p className="text-xs text-muted-foreground">{bond.yield} Yield</p>
+                              <span className="text-sm font-medium">{bond.assetCode}</span>
+                              <p className="text-xs text-muted-foreground">{bond.name} Yield</p>
                             </div>
                             <div className="text-right">
                               <div className="flex items-center">
-                                {bond.change >= 0 ? (
+                                {bond.growth >= 0 ? (
                                   <ArrowUpRight className="h-3 w-3 text-green-600 mr-1" />
                                 ) : (
                                   <ArrowDownRight className="h-3 w-3 text-red-600 mr-1" />
                                 )}
                                 <span
-                                  className={`text-sm font-medium ${
-                                    bond.change >= 0 ? "text-green-600" : "text-red-600"
-                                  }`}
+                                  className={`text-sm font-medium ${bond.growth >= 0 ? "text-green-600" : "text-red-600"}`}
                                 >
-                                  {bond.change >= 0 ? "+" : ""}
-                                  {bond.change}%
+                                  {bond.growth.toFixed(2) >= 0 ? "+" : ""}{bond.growth.toFixed(2)}%
                                 </span>
                               </div>
                             </div>
@@ -353,7 +365,6 @@ export default function PortfolioDashboard() {
                     )}
                   </CardContent>
                 </Card>
-
               </div>
             </div>
           </div>
