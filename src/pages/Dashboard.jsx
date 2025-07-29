@@ -27,10 +27,13 @@ import {
   stockData,
   bondData,
   marketData,
-  COLORS
+  COLORS,
+  initDashboardData
 } from "../constants/dashboardData"
 
 import { dashboardData} from "../constants/dashboardData"
+
+//await initDashboardData();
 
 const {
   stockNW, stockNW_lm, stockNW_ld,
