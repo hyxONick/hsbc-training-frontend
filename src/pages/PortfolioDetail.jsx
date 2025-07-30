@@ -1,13 +1,15 @@
 // src/pages/PortfolioDetail.jsx
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "/src/components/ui/avatar";
 import { Button } from "/src/components/ui/button";
 import {
   Search, Bell, LayoutDashboard, FileText, TrendingUp, Briefcase,
-  Globe, Settings, ArrowUpRight, ArrowDownRight
+  Globe, Settings
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "/src/components/ui/card";
-import { portfolios, portfolioItems } from "../constants/portfolioData";
+
+import { fetchUserPortfolios, fetchPortfolioSummary } from "../api/portfolio";
+import { fetchAllPortfolioItems } from "../api/portfolioItem";
 
 function SortArrow({ columnKey, sortConfig }) {
   if (sortConfig.key !== columnKey) return null;
@@ -15,40 +17,54 @@ function SortArrow({ columnKey, sortConfig }) {
 }
 
 export default function PortfolioDetail() {
-  const user = JSON.parse(localStorage.getItem("user"));
-
-  // 计算每个组合的总价值、总收益、资产数量
-  const portfolioSummary = portfolios.map(p => {
-    const items = portfolioItems.filter(item => item.portfolioId === p.id);
-    const totalValue = items.reduce((sum, i) => sum + i.totalValue, 0);
-    const totalGain = items.reduce((sum, i) => sum + i.gain, 0);
-    const totalGainPercent = totalValue ? ((totalGain / (totalValue - totalGain)) * 100).toFixed(2) : "0.00";
-    return {
-      ...p,
-      totalValue,
-      totalGain,
-      totalGainPercent,
-      assetCount: items.length,
-    };
+  const [user] = useState(() => {
+    const storedUser = localStorage.getItem("user");
+    return storedUser ? JSON.parse(storedUser) : null;
   });
 
-  // 排序状态
-  const [sortConfig, setSortConfig] = useState({ key: "portfolioId", direction: "asc" });
+  const [portfolios, setPortfolios] = useState([]);
+  const [portfolioItems, setPortfolioItems] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // 筛选状态
+  const [sortConfig, setSortConfig] = useState({ key: "portfolioId", direction: "asc" });
   const [filterPortfolioId, setFilterPortfolioId] = useState("all");
   const [filterAssetType, setFilterAssetType] = useState("all");
 
-  // 给资产加上组合名称字段
-  const assetsWithPortfolio = portfolioItems.map(item => {
-    const p = portfolios.find(p => p.id === item.portfolioId);
-    return {
-      ...item,
-      portfolioName: p ? p.name : "Unknown",
-    };
-  });
+  useEffect(() => {
+    async function loadData() {
+      try {
+        if (!user) return;
 
-  // 处理排序请求
+        const [pData, itemData] = await Promise.all([
+          fetchUserPortfolios(user.id),
+          fetchAllPortfolioItems()
+        ]);
+
+        const summaries = await Promise.all(
+          pData.map(p => fetchPortfolioSummary(p.id))
+        );
+
+        // ✅ 合并 summary
+        const mergedPortfolios = pData.map((p, index) => ({
+          ...p,
+          totalValue: summaries[index]?.totalValue || 0,
+          totalGain: summaries[index]?.totalGain || 0,
+          totalGainPercent: summaries[index]?.totalGainPercent || "0.00",
+          assetCount: summaries[index]?.assetCount || 0,
+          holdings: summaries[index]?.holdings || [],
+        }));
+
+        setPortfolios(mergedPortfolios);
+        setPortfolioItems(itemData);
+      } catch (err) {
+        console.error("❌ 加载数据失败", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, [user]);
+
   function requestSort(key) {
     let direction = "asc";
     if (sortConfig.key === key && sortConfig.direction === "asc") {
@@ -57,14 +73,33 @@ export default function PortfolioDetail() {
     setSortConfig({ key, direction });
   }
 
-  // 先筛选再排序
+  // ✅ useMemo 整理 holdingsMap
   const filteredAndSortedAssets = useMemo(() => {
-    let filtered = assetsWithPortfolio;
+    const holdingsMap = {};
+    portfolios.forEach(p => {
+      if (!p.holdings) return;
+      p.holdings.forEach(h => {
+        holdingsMap[`${p.id}_${h.assetCode}`] = h;
+      });
+    });
+
+    let filtered = portfolioItems.map(item => {
+      const p = portfolios.find(p => p.id === item.portfolioId);
+      const holding = holdingsMap[`${item.portfolioId}_${item.assetCode}`] || {};
+      return {
+        ...item,
+        companyName: holding.name,
+        portfolioName: p ? p.name : "Unknown",
+        currentPrice: holding.currentPrice || null,
+        totalValue: holding.marketValue || 0,
+        gain: holding.unrealizedGain || 0,
+        status: holding.status || "closed",   // ✅ 带 status
+      };
+    });
 
     if (filterPortfolioId !== "all") {
       filtered = filtered.filter(item => item.portfolioId === Number(filterPortfolioId));
     }
-
     if (filterAssetType !== "all") {
       filtered = filtered.filter(item => item.assetType === filterAssetType);
     }
@@ -83,21 +118,17 @@ export default function PortfolioDetail() {
     }
 
     return filtered;
-  }, [assetsWithPortfolio, filterPortfolioId, filterAssetType, sortConfig]);
+  }, [portfolioItems, portfolios, filterPortfolioId, filterAssetType, sortConfig]);
+
+  if (loading) return <div className="p-6 text-gray-600">Loading...</div>;
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
+      {/* ✅ Header */}
       <header className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <div className="text-xl font-bold text-blue-600">Portfolio Manager</div>
-            <nav className="hidden md:flex space-x-6">
-              <a href="#" className="text-gray-600 hover:text-gray-900">Overview</a>
-              <a href="#" className="text-gray-600 hover:text-gray-900">Trading</a>
-              <a href="#" className="text-gray-600 hover:text-gray-900">Research</a>
-              <a href="#" className="text-gray-600 hover:text-gray-900">Reports</a>
-            </nav>
           </div>
           <div className="flex items-center space-x-4">
             <Button variant="ghost" size="icon"><Search className="h-4 w-4" /></Button>
@@ -113,15 +144,14 @@ export default function PortfolioDetail() {
         </div>
       </header>
 
-      {/* Main layout */}
+      {/* ✅ Sidebar */}
       <div className="flex">
-        {/* Sidebar */}
         <aside className="w-64 bg-white border-r border-gray-200 min-h-screen p-6">
           <nav className="space-y-2">
             <a href="/dashboard" className="flex items-center space-x-3 text-gray-700 p-2 rounded-lg hover:bg-gray-100">
               <LayoutDashboard className="h-4 w-4" /><span>Dashboard</span>
             </a>
-            <a href="asset-detail" className="flex items-center space-x-3 text-gray-700 p-2 rounded-lg hover:bg-gray-100">
+            <a href="/asset-detail" className="flex items-center space-x-3 text-gray-700 p-2 rounded-lg hover:bg-gray-100">
               <Briefcase className="h-4 w-4" /><span>Asset Detail</span>
             </a>
             <a href="/profit-analysis" className="flex items-center space-x-3 text-gray-700 p-2 rounded-lg hover:bg-gray-100">
@@ -139,19 +169,19 @@ export default function PortfolioDetail() {
           </nav>
         </aside>
 
-        {/* Content */}
+        {/* ✅ Main Content */}
         <main className="flex-1 p-6 space-y-6">
           <h1 className="text-2xl font-bold text-gray-800 mb-4">Your Investment Portfolios</h1>
 
-          {/* 组合汇总卡片 */}
+          {/* ✅ Portfolio Summary */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            {portfolioSummary.map((p) => (
+            {portfolios.map((p) => (
               <Card key={p.id}>
                 <CardHeader>
                   <CardTitle>{p.name}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p>Created At: {p.createdAt}</p>
+                  <p>Created At: {new Date(p.createdAt).toLocaleDateString()}</p>
                   <p>Total Value: <span className="text-green-600 font-semibold">${p.totalValue.toLocaleString()}</span></p>
                   <p>Total Gain: <span className={`font-semibold ${p.totalGain >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                     {p.totalGain >= 0 ? '+' : ''}${p.totalGain.toLocaleString()}</span> ({p.totalGainPercent}%)
@@ -162,7 +192,7 @@ export default function PortfolioDetail() {
             ))}
           </div>
 
-          {/* 筛选控件 */}
+          {/* ✅ Filters */}
           <div className="flex space-x-4 mb-4">
             <select
               value={filterPortfolioId}
@@ -187,71 +217,31 @@ export default function PortfolioDetail() {
             </select>
           </div>
 
-          {/* 资产明细表格 */}
+          {/* ✅ Table */}
           <div className="overflow-auto">
             <table className="w-full table-auto text-sm text-left bg-white border border-gray-200">
               <thead className="bg-gray-100 text-gray-700">
                 <tr>
-                  <th
-                    className="px-4 py-2 border cursor-pointer"
-                    onClick={() => requestSort("portfolioId")}
-                  >
-                    Portfolio ID <SortArrow columnKey="portfolioId" sortConfig={sortConfig} />
-                  </th>
-                  <th
-                    className="px-4 py-2 border cursor-pointer"
-                    onClick={() => requestSort("portfolioName")}
-                  >
-                    Portfolio Name <SortArrow columnKey="portfolioName" sortConfig={sortConfig} />
-                  </th>
-                  <th
-                    className="px-4 py-2 border cursor-pointer"
-                    onClick={() => requestSort("assetCode")}
-                  >
-                    Asset Code <SortArrow columnKey="assetCode" sortConfig={sortConfig} />
-                  </th>
-                  <th
-                    className="px-4 py-2 border cursor-pointer"
-                    onClick={() => requestSort("name")}
-                  >
-                    Name <SortArrow columnKey="name" sortConfig={sortConfig} />
-                  </th>
-                  <th
-                    className="px-4 py-2 border cursor-pointer"
-                    onClick={() => requestSort("assetType")}
-                  >
-                    Type <SortArrow columnKey="assetType" sortConfig={sortConfig} />
-                  </th>
-                  <th
-                    className="px-4 py-2 border cursor-pointer"
-                    onClick={() => requestSort("quantity")}
-                  >
-                    Quantity <SortArrow columnKey="quantity" sortConfig={sortConfig} />
-                  </th>
-                  <th
-                    className="px-4 py-2 border cursor-pointer"
-                    onClick={() => requestSort("currentPrice")}
-                  >
-                    Price <SortArrow columnKey="currentPrice" sortConfig={sortConfig} />
-                  </th>
-                  <th
-                    className="px-4 py-2 border cursor-pointer"
-                    onClick={() => requestSort("totalValue")}
-                  >
-                    Total Value <SortArrow columnKey="totalValue" sortConfig={sortConfig} />
-                  </th>
-                  <th
-                    className="px-4 py-2 border cursor-pointer"
-                    onClick={() => requestSort("gain")}
-                  >
-                    Gain <SortArrow columnKey="gain" sortConfig={sortConfig} />
-                  </th>
-                  <th
-                    className="px-4 py-2 border cursor-pointer"
-                    onClick={() => requestSort("purchaseDate")}
-                  >
-                    Purchase Date <SortArrow columnKey="purchaseDate" sortConfig={sortConfig} />
-                  </th>
+                  {[
+                    ["portfolioId", "Portfolio ID"],
+                    ["portfolioName", "Portfolio Name"],
+                    ["assetCode", "Asset Code"],
+                    ["companyName", "Name"], // 持仓 / 做空 / 清仓
+                    ["assetType", "Type"],
+                    ["quantity", "Quantity"],
+                    ["currentPrice", "Price"],
+                    ["totalValue", "Total Value"],
+                    ["gain", "Gain"],
+                    ["purchaseDate", "Purchase Date"]
+                  ].map(([key, label]) => (
+                    <th
+                      key={key}
+                      className="px-4 py-2 border cursor-pointer"
+                      onClick={() => requestSort(key)}
+                    >
+                      {label} <SortArrow columnKey={key} sortConfig={sortConfig} />
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
@@ -260,21 +250,41 @@ export default function PortfolioDetail() {
                     <td className="px-4 py-2">{asset.portfolioId}</td>
                     <td className="px-4 py-2">{asset.portfolioName}</td>
                     <td className="px-4 py-2">{asset.assetCode}</td>
-                    <td className="px-4 py-2">{asset.name}</td>
-                    <td className="px-4 py-2">{asset.assetType}</td>
-                    <td className="px-4 py-2">{asset.quantity}</td>
-                    <td className="px-4 py-2">${asset.currentPrice}</td>
-                    <td className="px-4 py-2 font-semibold">${asset.totalValue.toLocaleString()}</td>
-                    <td className={`px-4 py-2 font-semibold ${asset.gain >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {asset.gain >= 0 ? '+' : ''}${asset.gain}
+
+                    {/* ✅ 在名称后面贴状态标签 */}
+                    <td className="px-4 py-2">
+                      {asset.companyName}
+                      {asset.status && (
+                        <span
+                          className={`ml-2 px-2 py-0.5 rounded text-xs font-bold
+                            ${asset.status === 'long' ? 'bg-green-100 text-green-700' :
+                              asset.status === 'short' ? 'bg-orange-100 text-orange-700' :
+                              'bg-gray-100 text-gray-600'}`}
+                        >
+                          {asset.status.toUpperCase()}
+                        </span>
+                      )}
                     </td>
-                    <td className="px-4 py-2">{asset.purchaseDate}</td>
+
+                    <td className="px-4 py-2">{asset.assetType}</td>
+                    <td className="px-4 py-2">{Number(asset.quantity).toFixed(4)}</td>
+                    <td className="px-4 py-2">${asset.currentPrice !== null ? asset.currentPrice.toFixed(2) : '-'}</td>
+                    <td className="px-4 py-2 font-semibold">${(asset.totalValue || 0).toLocaleString()}</td>
+                    <td className={`px-4 py-2 font-semibold ${asset.gain >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      {asset.gain >= 0 ? '+' : ''}${asset.gain.toFixed(2)}
+                    </td>
+                    <td className="px-4 py-2">
+                      {new Date(asset.purchaseDate).toLocaleDateString(undefined, {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                      })}
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-
         </main>
       </div>
     </div>
