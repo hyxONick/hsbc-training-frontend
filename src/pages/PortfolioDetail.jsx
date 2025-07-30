@@ -1,5 +1,6 @@
 // src/pages/PortfolioDetail.jsx
 import React, { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "/src/components/ui/avatar";
 import { Button } from "/src/components/ui/button";
 import {
@@ -17,6 +18,13 @@ function SortArrow({ columnKey, sortConfig }) {
 }
 
 export default function PortfolioDetail() {
+  const navigate = useNavigate();
+
+  // 点击跳转函数
+  const handleAssetClick = (assetCode) => {
+    navigate(`/kline/${assetCode}`);
+  };
+
   const [user] = useState(() => {
     const storedUser = localStorage.getItem("user");
     return storedUser ? JSON.parse(storedUser) : null;
@@ -88,6 +96,7 @@ export default function PortfolioDetail() {
       const holding = holdingsMap[`${item.portfolioId}_${item.assetCode}`] || {};
       return {
         ...item,
+        portfolioItemId: holding.portfolioItemId,
         companyName: holding.name,
         portfolioName: p ? p.name : "Unknown",
         currentPrice: holding.currentPrice || null,
@@ -249,17 +258,23 @@ export default function PortfolioDetail() {
                   <tr key={asset.id} className="border-t hover:bg-gray-50">
                     <td className="px-4 py-2">{asset.portfolioId}</td>
                     <td className="px-4 py-2">{asset.portfolioName}</td>
-                    <td className="px-4 py-2">{asset.assetCode}</td>
-
-                    {/* ✅ 在名称后面贴状态标签 */}
-                    <td className="px-4 py-2">
+                    <td
+                      className="px-4 py-2 text-blue-600 cursor-pointer hover:underline"
+                      onClick={() => handleAssetClick(asset.assetCode)}
+                    >
+                      {asset.assetCode}
+                    </td>
+                    <td
+                      className="px-4 py-2 text-blue-600 cursor-pointer hover:underline"
+                      onClick={() => handleAssetClick(asset.assetCode)}
+                    >
                       {asset.companyName}
                       {asset.status && (
                         <span
                           className={`ml-2 px-2 py-0.5 rounded text-xs font-bold
-                            ${asset.status === 'long' ? 'bg-green-100 text-green-700' :
+                  ${asset.status === 'long' ? 'bg-green-100 text-green-700' :
                               asset.status === 'short' ? 'bg-orange-100 text-orange-700' :
-                              'bg-gray-100 text-gray-600'}`}
+                                'bg-gray-100 text-gray-600'}`}
                         >
                           {asset.status.toUpperCase()}
                         </span>

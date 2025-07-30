@@ -7,7 +7,7 @@ import Settings from './pages/Settings'
 import AssetDetail from './pages/AssetDetail'
 import ProfitAnalysis from './pages/ProfitAnalysis'
 import PortfolioDetail from './pages/PortfolioDetail'
-
+import Kline from './pages/Kline'
 import Home from './pages/Home'
 
 function App() {
@@ -19,12 +19,13 @@ function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/dashboard" element={<PortfolioDashboard />} />
-      <Route path="/dashboard" element={isLoggedIn ? <PortfolioDashboard /> : <Navigate to="/login" />}/>
+      <Route path="/dashboard" element={isLoggedIn ? <PortfolioDashboard /> : <Navigate to="/login" />} />
       <Route path="/market-information" element={isLoggedIn ? <MarketInformation /> : <Navigate to="/login" />} />
       <Route path="/settings" element={isLoggedIn ? <Settings /> : <Navigate to="/login" />} />
       <Route path="/asset-detail" element={isLoggedIn ? <AssetDetail /> : <Navigate to="/login" />} />
       <Route path="/profit-analysis" element={isLoggedIn ? <ProfitAnalysis /> : <Navigate to="/login" />} />
       <Route path="/portfolio-detail" element={isLoggedIn ? <PortfolioDetail /> : <Navigate to="/login" />} />
+      <Route path="/kline/:assetCode" element={isLoggedIn ? <Kline /> : <Navigate to="/login" />} />
     </Routes>
   )
 }

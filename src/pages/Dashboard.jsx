@@ -315,7 +315,7 @@ export default function PortfolioDashboard() {
 
                     {assetType === "stocks" && (
                       <div className="space-y-3">
-                        {stockData.map((stock, idx) => (
+                        {(stockData || []).map((stock, idx) => (
                           <div key={stock?.assetCode || idx} className="flex items-center justify-between">
                             <div>
                               <span className="text-sm font-medium">{stock?.assetCode || 'N/A'}</span>
