@@ -10,11 +10,22 @@ export default function Home() {
     navigate('/login')
   }
 
+  const goToDashboard = () => {
+    navigate('/dashboard')
+  }
+
   return (
     <div className="p-6 max-w-md mx-auto mt-20 bg-white shadow rounded text-center">
       <h2 className="text-2xl font-bold mb-4">Welcome, {user.username}</h2>
       <p className="mb-4">Role: {user.role}</p>
-      <button onClick={logout} className="bg-red-500 text-white px-4 py-2 rounded">Logout</button>
+      <div className="flex flex-col items-center space-y-3">
+        <button onClick={logout} className="bg-red-500 text-white px-4 py-2 rounded w-40">
+          Logout
+        </button>
+        <button onClick={goToDashboard} className="bg-blue-600 text-white px-4 py-2 rounded w-40">
+          Go to Dashboard
+        </button>
+      </div>
     </div>
   )
 }
