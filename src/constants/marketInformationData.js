@@ -72,53 +72,84 @@ export const globalIndices = [
 
 
 // 个股行情
+// 个股行情（已移除 speed 和 volume）
 export const stockQuotes = [
   { 
     symbol: 'AAPL', 
     name: 'Apple Inc.', 
     price: 152.34, 
     change: 1.2, 
-    changeAmount: 1.83, 
-    speed: 0.3, 
-    volume: '12.5B' 
+    changeAmount: 1.83 
   },
   { 
     symbol: 'MSFT', 
     name: 'Microsoft Corp.', 
     price: 318.56, 
     change: -0.8, 
-    changeAmount: -2.57, 
-    speed: -0.1, 
-    volume: '8.7B' 
+    changeAmount: -2.57 
   },
   { 
     symbol: 'GOOGL', 
     name: 'Alphabet Inc.', 
     price: 125.67, 
     change: 0.4, 
-    changeAmount: 0.50, 
-    speed: 0.2, 
-    volume: '5.2B' 
+    changeAmount: 0.50 
   },
   { 
     symbol: 'TSLA', 
     name: 'Tesla Inc.', 
     price: 652.78, 
     change: 3.1, 
-    changeAmount: 20.21, 
-    speed: 1.2, 
-    volume: '15.3B' 
+    changeAmount: 20.21 
   },
   { 
     symbol: 'NVDA', 
     name: 'NVIDIA Corp.', 
     price: 842.12, 
     change: 2.7, 
-    changeAmount: 22.74, 
-    speed: 0.9, 
-    volume: '18.9B' 
+    changeAmount: 22.74 
   },
+  {
+    symbol: 'AMZN',
+    name: 'Amazon.com Inc.',
+    price: 132.77,
+    change: 1.5,
+    changeAmount: 1.97
+  },
+  {
+    symbol: 'META',
+    name: 'Meta Platforms Inc.',
+    price: 298.12,
+    change: -1.3,
+    changeAmount: -3.95
+  },
+  {
+    symbol: 'BABA',
+    name: 'Alibaba Group Holding Ltd.',
+    price: 89.45,
+    change: 0.9,
+    changeAmount: 0.80
+  }
 ]
+
+
+export const allAssets = [
+  { symbol: 'AAPL', name: 'Apple Inc.', type: 'stock', price: 152.34, change: 1.2, changeAmount: 1.83 },
+  { symbol: 'MSFT', name: 'Microsoft Corp.', type: 'stock', price: 318.56, change: -0.8, changeAmount: -2.57 },
+  { symbol: 'GOOGL', name: 'Alphabet Inc.', type: 'stock', price: 125.67, change: 0.4, changeAmount: 0.50 },
+  { symbol: 'TSLA', name: 'Tesla Inc.', type: 'stock', price: 652.78, change: 3.1, changeAmount: 20.21 },
+  { symbol: 'NVDA', name: 'NVIDIA Corp.', type: 'stock', price: 842.12, change: 2.7, changeAmount: 22.74 },
+  { symbol: 'Bond A', name: 'US Treasury 10Y', type: 'bond', price: 98.50, change: 0.0, changeAmount: 0.0 },
+  { symbol: 'Bond B', name: 'Corporate Bond B', type: 'bond', price: 102.20, change: 0.0, changeAmount: 0.0 },
+  { symbol: 'Bond C', name: 'Municipal Bond C', type: 'bond', price: 101.75, change: 0.0, changeAmount: 0.0 },
+  { symbol: 'Bond D', name: 'Corporate Bond D', type: 'bond', price: 99.80, change: 0.0, changeAmount: 0.0 },
+  { symbol: 'Bond E', name: 'Bond ETF E', type: 'bond', price: 100.40, change: 0.0, changeAmount: 0.0 },
+  { symbol: 'META', name: 'Meta Platforms Inc.', type: 'stock', price: 340.12, change: -1.3, changeAmount: -3.95 },
+  { symbol: 'ORCL', name: 'Oracle Corp.', type: 'stock', price: 120.45, change: 0.0, changeAmount: 0.0 }
+];
+
+
+
 
 export function calculateMarketRating(histogram) {
   const total = histogram.reduce((sum, item) => sum + item.count, 0);
@@ -150,40 +181,3 @@ export function calculateMarketRating(histogram) {
   return { score, suggestion };
 }
 
-export const stockCandlesticks = {
-  AAPL: [
-    { time: '09:30', open: 185, close: 188, high: 190, low: 183 },
-    { time: '10:30', open: 188, close: 186, high: 189, low: 185 },
-    { time: '11:30', open: 186, close: 187, high: 188, low: 184 },
-    { time: '12:30', open: 187, close: 185, high: 188, low: 183 },
-    { time: '13:30', open: 185, close: 189, high: 190, low: 184 }
-  ],
-  MSFT: [
-    { time: '09:30', open: 340, close: 342, high: 345, low: 338 },
-    { time: '10:30', open: 342, close: 341, high: 344, low: 340 },
-    { time: '11:30', open: 341, close: 343, high: 346, low: 340 },
-    { time: '12:30', open: 343, close: 339, high: 344, low: 338 },
-    { time: '13:30', open: 339, close: 344, high: 345, low: 338 }
-  ],
-  GOOGL: [
-    { time: '09:30', open: 127, close: 130, high: 131, low: 126 },
-    { time: '10:30', open: 130, close: 129, high: 132, low: 128 },
-    { time: '11:30', open: 129, close: 128, high: 130, low: 127 },
-    { time: '12:30', open: 128, close: 131, high: 132, low: 127 },
-    { time: '13:30', open: 131, close: 133, high: 134, low: 130 }
-  ],
-  TSLA: [
-    { time: '09:30', open: 700, close: 710, high: 715, low: 695 },
-    { time: '10:30', open: 710, close: 705, high: 712, low: 703 },
-    { time: '11:30', open: 705, close: 707, high: 710, low: 704 },
-    { time: '12:30', open: 707, close: 702, high: 708, low: 700 },
-    { time: '13:30', open: 702, close: 715, high: 718, low: 701 }
-  ],
-  NVDA: [
-    { time: '09:30', open: 800, close: 810, high: 815, low: 795 },  
-    { time: '10:30', open: 810, close: 805, high: 812, low: 802 },
-    { time: '11:30', open: 805, close: 808, high: 811, low: 804 },
-    { time: '12:30', open: 808, close: 802, high: 810, low: 800 },
-    { time: '13:30', open: 802, close: 815, high: 818, low: 801 }
-  ]
-}
