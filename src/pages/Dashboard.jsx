@@ -7,8 +7,9 @@ import {
   Briefcase, DollarSign, Activity, ArrowUpRight, ArrowDownRight, Globe,
 } from "lucide-react"
 import { PieChart, Pie, Cell, Legend, Tooltip, ResponsiveContainer } from "recharts"
-import { LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts"
+// import { LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts"
 import { fetchTopAssets, fetchUserSummary, fetchUserMonthlyProfit } from '../api/statistics'
+import {BarChart,Bar,XAxis,YAxis,CartesianGrid } from 'recharts';
 
 import { marketData } from '../constants/dashboardData'
 
@@ -125,7 +126,7 @@ export default function PortfolioDashboard() {
         {/* Sidebar 保持不动 */}
         <aside className="w-64 bg-white border-r border-gray-200 min-h-screen p-6">
           <nav className="space-y-2">
-            <a href="#" className="flex items-center space-x-3 text-blue-600 bg-blue-50 p-2 rounded-lg">
+            <a href="/dashboard" className="flex items-center space-x-3 text-blue-600 bg-blue-50 p-2 rounded-lg">
               <LayoutDashboard className="h-4 w-4" /><span>Dashboard</span>
             </a>
             <a href="/asset-detail" className="flex items-center space-x-3 text-gray-700 p-2 rounded-lg hover:bg-gray-100">
@@ -173,10 +174,10 @@ export default function PortfolioDashboard() {
               <Card>
                 <CardHeader><CardTitle>Today's Gain/Loss</CardTitle></CardHeader>
                 <CardContent>
-                  <div className={`text-2xl font-bold ${today_gain >= 0 ? "text-green-600" : "text-red-600"}`}>
+                  <div className={`text-2xl font-bold ${today_gain >= 0 ? "text-red-600" : "text-green-600"}`}>
                     {today_gain >= 0 ? "+" : "-"}${Math.abs(today_gain).toLocaleString()}
                   </div>
-                  <p className={`text-xs flex items-center ${today_gain_pct >= 0 ? "text-green-600" : "text-red-600"}`}>
+                  <p className={`text-xs flex items-center ${today_gain_pct >= 0 ? "text-red-600" : "text-green-600"}`}>
                     {today_gain_pct >= 0 ? <ArrowUpRight className="h-3 w-3 mr-1" /> : <ArrowDownRight className="h-3 w-3 mr-1" />}
                     {today_gain_pct.toFixed(2)}% today
                   </p>
@@ -196,7 +197,7 @@ export default function PortfolioDashboard() {
               <Card>
                 <CardHeader><CardTitle>Total Return</CardTitle></CardHeader>
                 <CardContent>
-                  <div className={`text-2xl font-bold ${total_return_pct >= 0 ? "text-green-600" : "text-red-600"}`}>
+                  <div className={`text-2xl font-bold ${total_return_pct >= 0 ? "text-red-600" : "text-green-600"}`}>
                     {total_return_pct >= 0 ? "+" : ""}{total_return_pct.toFixed(1)}%
                   </div>
                   <p className="text-xs text-muted-foreground">Since inception</p>
@@ -205,21 +206,22 @@ export default function PortfolioDashboard() {
             </div>
 
             {/* 📊 饼图 & 收益趋势 */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               {/* 左列：资产分布 + 收益趋势 */}
               <div className="lg:col-span-2 space-y-6">
                 <Card>
                   <CardHeader><CardTitle>Asset Distribution</CardTitle></CardHeader>
                   <CardContent>
-                    <div className="h-80 w-full">
+                    <div className="h-60 w-full">
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
-                          <Pie data={assetData} cx="50%" cy="50%" outerRadius={80} dataKey="value" nameKey="name" label>
+                          <Pie data={assetData} cx="50%" cy="50%" outerRadius={80} dataKey="value" 
+                          nameKey="name" label={(entry) => `${(entry.percent * 100).toFixed(1)}%`}>
                             {assetData.map((entry, index) => (
                               <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                             ))}
                           </Pie>
-                          <Tooltip />
+                          <Tooltip formatter={(value) => value.toFixed(2)} />
                           <Legend verticalAlign="bottom" height={36} />
                         </PieChart>
                       </ResponsiveContainer>
@@ -232,13 +234,20 @@ export default function PortfolioDashboard() {
                   <CardContent>
                     <div className="h-64 w-full">
                       <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={profitTrendData}>
+                        <BarChart data={profitTrendData}>
                           <CartesianGrid strokeDasharray="3 3" />
                           <XAxis dataKey="month" />
                           <YAxis />
-                          <Tooltip />
-                          <Line type="monotone" dataKey="profit" stroke="#10B981" strokeWidth={2} dot={{ r: 4 }} />
-                        </LineChart>
+                          <Tooltip formatter={(value) => value.toFixed(2)} />
+                            <Bar dataKey="profit">
+                              {profitTrendData.map((entry, index) => (
+                                <Cell
+                                  key={`cell-${index}`}
+                                  fill={entry.profit > 0 ? '#EF4444' : '#10B981'} // 红/绿
+                                />
+                              ))}  
+                            </Bar>
+                        </BarChart> 
                       </ResponsiveContainer>
                     </div>
                   </CardContent>
@@ -248,7 +257,7 @@ export default function PortfolioDashboard() {
               {/* 右列：Stock/Bond */}
               <div className="space-y-6">
                 {/* Net Worth */}
-                <Card>
+                <Card className="h-30">
                   <CardHeader><CardTitle>Net Worth</CardTitle></CardHeader>
                   <CardContent>
                     <div className="flex justify-between items-center">
@@ -259,7 +268,7 @@ export default function PortfolioDashboard() {
                 </Card>
 
                 {/* Market Conditions */}
-                <Card>
+                <Card className="h-50">
                   <CardHeader><CardTitle>Market Conditions</CardTitle></CardHeader>
                   <CardContent>
                     <div className="space-y-3">
@@ -270,13 +279,13 @@ export default function PortfolioDashboard() {
                             <span className="text-sm font-medium">{item.value}</span>
                             {item.change >= 0 ? (
                               <>
-                                <ArrowUpRight className="h-3 w-3 text-green-600 ml-1" />
-                                <span className="text-xs text-green-600 ml-1">+{item.change}%</span>
+                                <ArrowUpRight className="h-3 w-3 text-red-600 ml-1" />
+                                <span className="text-xs text-red-600 ml-1">+{item.change}%</span>
                               </>
                             ) : (
                               <>
-                                <ArrowDownRight className="h-3 w-3 text-red-600 ml-1" />
-                                <span className="text-xs text-red-600 ml-1">{item.change}%</span>
+                                <ArrowDownRight className="h-3 w-3 text-green-600 ml-1" />
+                                <span className="text-xs text-green-600 ml-1">{item.change}%</span>
                               </>
                             )}
                           </div>
@@ -314,13 +323,13 @@ export default function PortfolioDashboard() {
                             </div>
                             <div className="text-right">
                               <div className="flex items-center">
-                                {stock?.change >= 0 ? (
-                                  <ArrowUpRight className="h-3 w-3 text-green-600 mr-1" />
+                                {stock?.growth >= 0 ? (
+                                  <ArrowUpRight className="h-3 w-3 text-red-600 mr-1" />
                                 ) : (
-                                  <ArrowDownRight className="h-3 w-3 text-red-600 mr-1" />
+                                  <ArrowDownRight className="h-3 w-3 text-green-600 mr-1" />
                                 )}
                                 <span
-                                  className={`text-sm font-medium ${stock?.growth >= 0 ? "text-green-600" : "text-red-600"
+                                  className={`text-sm font-medium ${stock?.growth >= 0 ? "text-red-600" : "text-green-600"
                                     }`}
                                 >
                                   {stock?.growth.toFixed(2) >= 0 ? "+" : ""}
@@ -348,16 +357,19 @@ export default function PortfolioDashboard() {
                             <div className="text-right">
                               <div className="flex items-center">
                                 {bond.growth >= 0 ? (
-                                  <ArrowUpRight className="h-3 w-3 text-green-600 mr-1" />
+                                  <ArrowUpRight className="h-3 w-3 text-red-600 mr-1" />
                                 ) : (
-                                  <ArrowDownRight className="h-3 w-3 text-red-600 mr-1" />
+                                  <ArrowDownRight className="h-3 w-3 text-green-600 mr-1" />
                                 )}
                                 <span
-                                  className={`text-sm font-medium ${bond.growth >= 0 ? "text-green-600" : "text-red-600"}`}
+                                  className={`text-sm font-medium ${bond.growth >= 0 ? "text-red-600" : "text-green-600"}`}
                                 >
                                   {bond.growth.toFixed(2) >= 0 ? "+" : ""}{bond.growth.toFixed(2)}%
                                 </span>
                               </div>
+                              <span className="text-xs text-muted-foreground">
+                                ${bond?.price?.toLocaleString?.() || 0}
+                              </span>
                             </div>
                           </div>
                         ))}
