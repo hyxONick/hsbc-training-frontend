@@ -1,5 +1,5 @@
 // src/pages/ProfitAnalysis.jsx
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   LineChart, Line, XAxis, YAxis, Tooltip as LineTooltip, ResponsiveContainer as LineContainer,
   BarChart, Bar, Cell, Legend
@@ -10,20 +10,61 @@ import {
 import { Card, CardHeader, CardTitle, CardContent } from "/src/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "/src/components/ui/avatar";
 import { Button } from "/src/components/ui/button";
-import { portfolioReturns, assetReturns, tradeRecords } from "../constants/profitAnalysisData";
+
+// ✅ 🔗 改成后端 API
+import { fetchAllPortfolioReturns, fetchAllAssetReturns, fetchAllTradeRecords } from "../api/portfolio";
 
 export default function ProfitAnalysis() {
   const user = JSON.parse(localStorage.getItem("user"));
-  const [selectedPortfolio, setSelectedPortfolio] = useState("Growth Portfolio");
+
+  // ✅ 数据状态
+  const [portfolioReturns, setPortfolioReturns] = useState({});
+  const [assetReturns, setAssetReturns] = useState([]);
+  const [tradeRecords, setTradeRecords] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // ✅ 筛选 & 排序状态
+  const [selectedPortfolio, setSelectedPortfolio] = useState("");
   const [assetType, setAssetType] = useState("stock");
   const [filterPortfolio, setFilterPortfolio] = useState("all");
   const [filterAssetType, setFilterAssetType] = useState("all");
   const [filterAction, setFilterAction] = useState("all");
   const [sortConfig, setSortConfig] = useState({ key: "date", direction: "desc" });
 
+  // 🚀 从 API 获取数据
+  useEffect(() => {
+    async function loadData() {
+      try {
+        setLoading(true);
+        
+        const [returnsData, assetData, tradeData] = await Promise.all([
+          fetchAllPortfolioReturns(user.id),
+          fetchAllAssetReturns(user.id),
+          fetchAllTradeRecords(user.id)
+        ]);
+
+        setPortfolioReturns(returnsData || {});
+        setAssetReturns(assetData || []);
+        setTradeRecords(tradeData || []);
+
+        // ✅ 默认选第一个组合
+        if (returnsData && Object.keys(returnsData).length > 0) {
+          setSelectedPortfolio(Object.keys(returnsData)[0]);
+        }
+      } catch (error) {
+        console.error("❌ 获取收益分析数据失败", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, []);
+
+  // ✅ 当前组合的收益数据
   const portfolioData = portfolioReturns[selectedPortfolio] || [];
   const filteredAssetData = assetReturns.filter(a => a.type === assetType);
 
+  // ✅ 筛选 + 排序交易记录
   const filteredRecords = useMemo(() => {
     let result = tradeRecords.filter((record) => {
       return (
@@ -47,7 +88,7 @@ export default function ProfitAnalysis() {
     });
 
     return result;
-  }, [filterPortfolio, filterAssetType, filterAction, sortConfig]);
+  }, [filterPortfolio, filterAssetType, filterAction, sortConfig, tradeRecords]);
 
   const handleSort = (key) => {
     let direction = "asc";
@@ -57,6 +98,8 @@ export default function ProfitAnalysis() {
     setSortConfig({ key, direction });
   };
 
+  if (loading) return <div className="p-6 text-gray-600">📡 Loading Profit Analysis...</div>;
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -64,12 +107,6 @@ export default function ProfitAnalysis() {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <div className="text-xl font-bold text-blue-600">Portfolio Manager</div>
-            <nav className="hidden md:flex space-x-6">
-              <a href="#" className="text-gray-600 hover:text-gray-900">Overview</a>
-              <a href="#" className="text-gray-600 hover:text-gray-900">Trading</a>
-              <a href="#" className="text-gray-600 hover:text-gray-900">Research</a>
-              <a href="#" className="text-gray-600 hover:text-gray-900">Reports</a>
-            </nav>
           </div>
           <div className="flex items-center space-x-4">
             <Button variant="ghost" size="icon"><Search className="h-4 w-4" /></Button>
@@ -114,7 +151,7 @@ export default function ProfitAnalysis() {
         <main className="flex-1 p-6 space-y-6">
           <h1 className="text-2xl font-bold text-gray-800">Profit Analysis</h1>
 
-          {/* Portfolio Selector */}
+          {/* ✅ Portfolio Selector */}
           <div className="w-48">
             <select
               className="border px-3 py-2 rounded w-full"
@@ -127,7 +164,7 @@ export default function ProfitAnalysis() {
             </select>
           </div>
 
-          {/* Charts Section */}
+          {/* ✅ Charts Section */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Line Chart */}
             <Card>
@@ -188,7 +225,7 @@ export default function ProfitAnalysis() {
             </Card>
           </div>
 
-          {/* Filters */}
+          {/* ✅ Filters */}
           <div className="flex flex-wrap gap-4 mt-6">
             <select className="border px-3 py-1 rounded" value={filterPortfolio} onChange={e => setFilterPortfolio(e.target.value)}>
               <option value="all">All Portfolios</option>
@@ -201,6 +238,7 @@ export default function ProfitAnalysis() {
               <option value="all">All Types</option>
               <option value="stock">Stock</option>
               <option value="bond">Bond</option>
+              <option value="cash">Cash</option>
             </select>
 
             <select className="border px-3 py-1 rounded" value={filterAction} onChange={e => setFilterAction(e.target.value)}>
@@ -210,7 +248,7 @@ export default function ProfitAnalysis() {
             </select>
           </div>
 
-          {/* Trade Records Table */}
+          {/* ✅ Trade Records Table */}
           <div className="overflow-auto mt-4">
             <table className="min-w-full bg-white border text-sm">
               <thead className="bg-gray-100 border-b">

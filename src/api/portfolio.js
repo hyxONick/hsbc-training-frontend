@@ -53,3 +53,18 @@ export function fetchPortfolioSummary(portfolioId) {
   return api.get(`/portfolios/${portfolioId}/summary`)
     .then(res => res.data);
 }
+
+// 9. 获取所有投资组合的收益时间序列
+export function fetchAllPortfolioReturns(userId) {
+  return api.get(`/portfolios/${userId}/returns`).then(res => res.data);
+}
+
+// 10. 获取所有资产的收益率
+export function fetchAllAssetReturns(userId) {
+  return api.get(`/portfolios/${userId}/asset-returns`).then(res => res.data);
+}
+
+// 11. 获取所有买卖交易记录
+export function fetchAllTradeRecords(userId) {
+  return api.get(`/portfolios/${userId}/trade-records`).then(res => res.data);
+}
