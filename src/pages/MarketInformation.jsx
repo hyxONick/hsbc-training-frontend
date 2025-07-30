@@ -17,16 +17,24 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGri
 import {
     riseFallDistribution,
     globalIndices,
-    stockQuotes,
-    marketRating, // 别忘了加这行
+    stockQuotes, // 别忘了加这行
+    calculateMarketRating
 } from "../constants/marketInformationData"
 
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar'
 import 'react-circular-progressbar/dist/styles.css'
 
+const getYAxisDomain = (data) => {
+  const min = Math.min(...data);
+  const max = Math.max(...data);
+  const padding = (max - min) * 0.3;
+  return [min - padding, max + padding];
+};
 
 
 const user = JSON.parse(localStorage.getItem("user"))
+
+const marketRating = calculateMarketRating(riseFallDistribution.histogram)
 
 export default function MarketInformation() {
   return (
@@ -95,24 +103,22 @@ export default function MarketInformation() {
                 {/* 左边柱状图：8列 */}
                 <div className="h-72 col-span-12 md:col-span-8">
                     <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={[...riseFallDistribution.histogram].reverse()}>
+                        <BarChart data={[...riseFallDistribution.histogram]}>
                             <CartesianGrid strokeDasharray="3 3" />
                             <XAxis dataKey="range" />
                             <YAxis />
                             <Tooltip />
                             <Bar dataKey="count" isAnimationActive={false}>
-                            {
-                                [...riseFallDistribution.histogram].reverse().map((entry, index) => (
+                              {[...riseFallDistribution.histogram].map((entry, index) => (
                                 <Cell
-                                    key={`cell-${index}`}
-                                    fill={(() => {
-                                    const match = entry.range.match(/(-?\d+\.?\d*)%?/);
-                                    const from = match ? parseFloat(match[1]) : 0;
-                                    return from >= 0 ? "#10B981" : "#EF4444";
-                                    })()}
+                                  key={`cell-${index}`}
+                                  fill={
+                                    /^-/.test(entry.range) || entry.range === "Lim Down"
+                                      ? "#EF4444"
+                                      : "#10B981"
+                                  }
                                 />
-                                ))
-                            }
+                              ))}
                             </Bar>
 
                         </BarChart>
@@ -160,8 +166,9 @@ export default function MarketInformation() {
                         </div>
                         <ResponsiveContainer width="100%" height={80}>
                         <LineChart data={index.trend.map((val, idx) => ({ name: idx, value: val }))}>
+                          <YAxis domain={getYAxisDomain(index.trend)} hide={true} />
                             <Line 
-                            type="monotone" 
+                            type="linear"
                             dataKey="value" 
                             stroke="#3b82f6" 
                             strokeWidth={2} 
