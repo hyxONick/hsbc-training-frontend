@@ -27,7 +27,7 @@ export default function RealisticKLineChart({ dateArr, priceArr }) {
   const option = {
     backgroundColor: "#fff",
     title: {
-      text: "拟真K线图" + (showLine ? " + 收盘价折线" : ""),
+      text: "Simulated Candlestick Chart" + (showLine ? " + Closing price line" : ""),
       left: 10,
       textStyle: { color: "#222", fontWeight: "700", fontSize: 18 },
     },
@@ -47,7 +47,7 @@ export default function RealisticKLineChart({ dateArr, priceArr }) {
           <strong>最高:</strong> ${k.data[3].toFixed(2)}<br/>`;
         if (showLine) {
           const l = params.find(p => p.seriesType === "line");
-          if (l) tip += `<strong>收盘价折线:</strong> ${l.data.toFixed(2)}<br/>`;
+          if (l) tip += `<strong>closing price line:</strong> ${l.data.toFixed(2)}<br/>`;
         }
         tip += "</div>";
         return tip;
@@ -105,7 +105,7 @@ export default function RealisticKLineChart({ dateArr, priceArr }) {
       ...(showLine
         ? [
             {
-              name: "收盘价折线",
+              name: "closing price line",
               type: "line",
               data: priceArr,
               smooth: true,
@@ -133,7 +133,7 @@ export default function RealisticKLineChart({ dateArr, priceArr }) {
         }}
         onClick={() => setShowLine(!showLine)}
       >
-        {showLine ? "隐藏收盘价折线" : "显示收盘价折线"}
+        {showLine ? "View Closing Price Line" : "Conceal Closing Price Line"}
       </button>
 
       <ReactEcharts
