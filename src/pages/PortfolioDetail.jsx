@@ -37,6 +37,7 @@ export default function PortfolioDetail() {
   const [sortConfig, setSortConfig] = useState({ key: "portfolioId", direction: "asc" });
   const [filterPortfolioId, setFilterPortfolioId] = useState("all");
   const [filterAssetType, setFilterAssetType] = useState("all");
+  const topPortfolioIds = portfolios.slice(0, 3).map(p => p.id);
 
   useEffect(() => {
     async function loadData() {
@@ -91,7 +92,9 @@ export default function PortfolioDetail() {
       });
     });
 
-    let filtered = portfolioItems.map(item => {
+    let filtered = portfolioItems
+    .filter(item => topPortfolioIds.includes(item.portfolioId))  // 👈 只保留前三个 portfolio 的项
+    .map(item => {
       const p = portfolios.find(p => p.id === item.portfolioId);
       const holding = holdingsMap[`${item.portfolioId}_${item.assetCode}`] || {};
       return {
@@ -102,9 +105,10 @@ export default function PortfolioDetail() {
         currentPrice: holding.currentPrice || null,
         totalValue: holding.marketValue || 0,
         gain: holding.unrealizedGain || 0,
-        status: holding.status || "closed",   // ✅ 带 status
+        status: holding.status || "closed",
       };
     });
+
 
     if (filterPortfolioId !== "all") {
       filtered = filtered.filter(item => item.portfolioId === Number(filterPortfolioId));
@@ -181,7 +185,7 @@ export default function PortfolioDetail() {
 
           {/* ✅ Portfolio Summary */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            {portfolios.map((p) => (
+            {portfolios.slice(0, 3).map((p) => (
               <Card key={p.id}>
                 <CardHeader>
                   <CardTitle>{p.name}</CardTitle>
