@@ -1,24 +1,27 @@
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react";
 import {
   Search, Bell, LayoutDashboard, FileText, TrendingUp,
   Briefcase, Globe, Settings
-} from "lucide-react"
-import { Avatar, AvatarFallback, AvatarImage } from "/src/components/ui/avatar"
-import { Button } from "/src/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "/src/components/ui/card"
+} from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "/src/components/ui/avatar";
+import { Button } from "/src/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "/src/components/ui/card";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   CartesianGrid, LineChart, Line, Cell
-} from "recharts"
-import { CircularProgressbar, buildStyles } from 'react-circular-progressbar'
-import 'react-circular-progressbar/dist/styles.css'
+} from "recharts";
+import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
+import 'react-circular-progressbar/dist/styles.css';
 
-import {
-  riseFallDistribution, globalIndices, stockQuotes, calculateMarketRating
-} from "../constants/marketInformationData"
+// ✅ 直接用你封装的 API
+import { 
+  fetchMarketIndices,
+  fetchRiseFallDistribution,
+  fetchStockQuotes,
+  fetchAllAssets
+} from "../api/market";   // ← 注意路径
 
-import { allAssets } from "../constants/marketInformationData"
-
+// Y轴范围计算
 const getYAxisDomain = (data) => {
   const min = Math.min(...data);
   const max = Math.max(...data);
@@ -26,23 +29,82 @@ const getYAxisDomain = (data) => {
   return [min - padding, max + padding];
 };
 
-const marketRating = calculateMarketRating(riseFallDistribution.histogram)
-const user = JSON.parse(localStorage.getItem("user"))
+// 计算市场评分
+const calculateMarketRating = (histogram) => {
+  const total = histogram.reduce((sum, item) => sum + item.count, 0);
+
+  const up = histogram
+    .filter(item => ["2%", "4%", "6%", "8%", "Lim Up"].includes(item.range))
+    .reduce((sum, item) => sum + item.count, 0);
+
+  const down = histogram
+    .filter(item => ["-2%", "-4%", "-6%", "-8%", "Lim Down"].includes(item.range))
+    .reduce((sum, item) => sum + item.count, 0);
+
+  const ratio = (up + down) / total;
+  const score = +(ratio * 5).toFixed(1);
+
+  let suggestion = "";
+  if (score >= 4) {
+    suggestion = "The market is active. Consider participating.";
+  } else if (score >= 2.5) {
+    suggestion = "The market shows healthy activity. Moderate opportunities available.";
+  } else if (score >= 1) {
+    suggestion = "The market is quiet. Consider waiting.";
+  } else {
+    suggestion = "The market is inactive. Participation not advised.";
+  }
+
+  return { score, suggestion };
+};
 
 export default function MarketInformation() {
-  const [page, setPage] = useState(1)
-  const itemsPerPage = 10
-  const totalPages = Math.ceil(allAssets.length / itemsPerPage)
-  const paginatedAssets = allAssets.slice((page - 1) * itemsPerPage, page * itemsPerPage)
+  const user = JSON.parse(localStorage.getItem("user"));
+
+  // ✅ 状态
+  const [histogram, setHistogram] = useState([]);
+  const [indices, setIndices] = useState([]);
+  const [stocks, setStocks] = useState([]);
+  const [assets, setAssets] = useState([]);
+  const [page, setPage] = useState(1);
+
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(assets.length / itemsPerPage);
+  const paginatedAssets = assets.slice((page - 1) * itemsPerPage, page * itemsPerPage);
+
+  // ✅ 拉数据
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [indicesData, riseFallData, stocksData, assetsData] = await Promise.all([
+          fetchMarketIndices(),
+          fetchRiseFallDistribution(),
+          fetchStockQuotes(),
+          fetchAllAssets()
+        ]);
+        setIndices(indicesData);
+        setHistogram(riseFallData.histogram);
+        setStocks(stocksData);
+        setAssets(assetsData);
+      } catch (err) {
+        console.error("❌ 加载市场信息失败:", err);
+      }
+    };
+
+    loadData();
+    // ⏳ 每 30 秒刷新一次
+    const interval = setInterval(loadData, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const marketRating = calculateMarketRating(histogram);
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
+      {/* ✅ Header */}
       <header className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <div className="text-xl font-bold text-blue-600">Portfolio Manager</div>
-          </div>
+          <div className="text-xl font-bold text-blue-600">Portfolio Manager</div>
           <div className="flex items-center space-x-4">
             <Button variant="ghost" size="icon"><Search className="h-4 w-4" /></Button>
             <Button variant="ghost" size="icon"><Bell className="h-4 w-4" /></Button>
@@ -58,7 +120,7 @@ export default function MarketInformation() {
       </header>
 
       <div className="flex">
-        {/* Sidebar */}
+        {/* ✅ Sidebar */}
         <aside className="w-64 bg-white border-r border-gray-200 min-h-screen p-6">
           <nav className="space-y-2">
             <a href="/dashboard" className="flex items-center space-x-3 text-gray-700 p-2 rounded-lg hover:bg-gray-100">
@@ -82,26 +144,27 @@ export default function MarketInformation() {
           </nav>
         </aside>
 
-        {/* Main */}
+        {/* ✅ Main */}
         <main className="flex-1 p-6">
           <div className="max-w-7xl mx-auto space-y-6">
             <h1 className="text-2xl font-bold text-gray-900 mb-4">Market Information</h1>
 
-            {/* Market Snapshot */}
+            {/* 📊 Market Snapshot */}
             <Card>
               <CardHeader><CardTitle>Market Snapshot</CardTitle></CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+                  
                   {/* Histogram */}
                   <div className="h-72 col-span-12 md:col-span-8">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={riseFallDistribution.histogram}>
+                      <BarChart data={histogram}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="range" />
                         <YAxis />
                         <Tooltip />
                         <Bar dataKey="count">
-                          {riseFallDistribution.histogram.map((entry, index) => (
+                          {histogram.map((entry, index) => (
                             <Cell
                               key={index}
                               fill={/^[-]/.test(entry.range) || entry.range === "Lim Down" ? "#EF4444" : "#10B981"}
@@ -132,14 +195,15 @@ export default function MarketInformation() {
               </CardContent>
             </Card>
 
-            {/* Index & Stock Side by Side */}
+            {/* 📈 Index & Stock Side by Side */}
             <div className="flex flex-col lg:flex-row gap-6">
-              {/* Index Trends - Left */}
+              
+              {/* Index Trends */}
               <div className="w-full lg:w-1/2">
                 <Card>
                   <CardHeader><CardTitle>Index Trends</CardTitle></CardHeader>
                   <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {globalIndices.map((index, i) => (
+                    {indices.map((index, i) => (
                       <div key={i} className="bg-white rounded shadow p-4">
                         <div className="flex justify-between mb-2">
                           <div>
@@ -162,100 +226,100 @@ export default function MarketInformation() {
                   </CardContent>
                 </Card>
               </div>
-              <div className="w-full lg:w-1/2">
-              <Card>
-                <CardHeader><CardTitle>Stock Quotes</CardTitle></CardHeader>
-                <CardContent>
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Symbol</th>
-                          <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Name</th>
-                          <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Price</th>
-                          <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Change%</th>
-                          <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Change</th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {stockQuotes.map((stock, i) => (
-                          <tr key={i} className="hover:bg-gray-50">
-                            <td className="px-3 py-2 text-sm font-medium text-gray-900">{stock.symbol}</td>
-                            <td className="px-3 py-2 text-sm text-gray-500">{stock.name}</td>
-                            <td className="px-3 py-2 text-sm text-gray-900">${stock.price.toFixed(2)}</td>
-                            <td className={`px-3 py-2 text-sm ${stock.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                              {stock.change >= 0 ? '+' : ''}{stock.change}%
-                            </td>
-                            <td className={`px-3 py-2 text-sm ${stock.changeAmount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                              {stock.changeAmount >= 0 ? '+' : ''}{stock.changeAmount.toFixed(2)}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </CardContent>
-              </Card>
 
+              {/* Stock Quotes */}
+              <div className="w-full lg:w-1/2">
+                <Card>
+                  <CardHeader><CardTitle>Stock Quotes</CardTitle></CardHeader>
+                  <CardContent>
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Symbol</th>
+                            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Name</th>
+                            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Price</th>
+                            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Change%</th>
+                            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Change</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {stocks.map((stock, i) => (
+                            <tr key={i} className="hover:bg-gray-50">
+                              <td className="px-3 py-2 text-sm font-medium text-gray-900">{stock.symbol}</td>
+                              <td className="px-3 py-2 text-sm text-gray-500">{stock.name}</td>
+                              <td className="px-3 py-2 text-sm text-gray-900">${stock.price.toFixed(2)}</td>
+                              <td className={`px-3 py-2 text-sm ${stock.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                {stock.change >= 0 ? '+' : ''}{stock.change}%
+                              </td>
+                              <td className={`px-3 py-2 text-sm ${stock.changeAmount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                {stock.changeAmount >= 0 ? '+' : ''}{stock.changeAmount.toFixed(2)}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             </div>
 
-
-           <Card>
-            <CardHeader><CardTitle>All Assets</CardTitle></CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200 text-sm">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-4 py-2 text-left">Symbol</th>
-                      <th className="px-4 py-2 text-left">Name</th>
-                      <th className="px-4 py-2 text-left">Type</th>
-                      <th className="px-4 py-2 text-left">Price</th>
-                      <th className="px-4 py-2 text-left">Change</th>
-                      <th className="px-4 py-2 text-left">Change%</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {paginatedAssets.map((a, i) => (
-                      <tr key={i} className="hover:bg-gray-50">
-                        <td className="px-4 py-2">{a.symbol}</td>
-                        <td className="px-4 py-2">{a.name}</td>
-                        <td className="px-4 py-2 capitalize">{a.type}</td>
-                        <td className="px-4 py-2">${a.price.toFixed(2)}</td>
-                        <td className={`px-4 py-2 ${a.changeAmount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          {a.changeAmount >= 0 ? '+' : ''}{a.changeAmount?.toFixed(2) ?? '--'}
-                        </td>
-                        <td className={`px-4 py-2 ${a.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          {a.change >= 0 ? '+' : ''}{a.change?.toFixed(2) ?? '--'}%
-                        </td>
+            {/* 📃 All Assets */}
+            <Card>
+              <CardHeader><CardTitle>All Assets</CardTitle></CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200 text-sm">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-2 text-left">Symbol</th>
+                        <th className="px-4 py-2 text-left">Name</th>
+                        <th className="px-4 py-2 text-left">Type</th>
+                        <th className="px-4 py-2 text-left">Price</th>
+                        <th className="px-4 py-2 text-left">Change</th>
+                        <th className="px-4 py-2 text-left">Change%</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {paginatedAssets.map((a, i) => (
+                        <tr key={i} className="hover:bg-gray-50">
+                          <td className="px-4 py-2">{a.symbol}</td>
+                          <td className="px-4 py-2">{a.name}</td>
+                          <td className="px-4 py-2 capitalize">{a.type}</td>
+                          <td className="px-4 py-2">${a.price.toFixed(2)}</td>
+                          <td className={`px-4 py-2 ${a.changeAmount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            {a.changeAmount >= 0 ? '+' : ''}{a.changeAmount?.toFixed(2) ?? '--'}
+                          </td>
+                          <td className={`px-4 py-2 ${a.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            {a.change >= 0 ? '+' : ''}{a.change?.toFixed(2) ?? '--'}%
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
 
-                {/* Pagination Buttons */}
-                <div className="mt-4 flex justify-end space-x-2">
-                  <button
-                    className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50"
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    disabled={page === 1}
-                  >Prev</button>
-                  <span className="px-2">{page} / {totalPages}</span>
-                  <button
-                    className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50"
-                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    disabled={page === totalPages}
-                  >Next</button>
+                  {/* Pagination */}
+                  <div className="mt-4 flex justify-end space-x-2">
+                    <button
+                      className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50"
+                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                      disabled={page === 1}
+                    >Prev</button>
+                    <span className="px-2">{page} / {totalPages}</span>
+                    <button
+                      className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50"
+                      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                      disabled={page === totalPages}
+                    >Next</button>
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-
+              </CardContent>
+            </Card>
 
           </div>
         </main>
       </div>
     </div>
-  )
+  );
 }
