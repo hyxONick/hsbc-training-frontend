@@ -9,9 +9,10 @@ import {
 import { PieChart, Pie, Cell, Legend, Tooltip, ResponsiveContainer } from "recharts"
 // import { LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts"
 import { fetchTopAssets, fetchUserSummary, fetchUserMonthlyProfit } from '../api/statistics'
-import {BarChart,Bar,XAxis,YAxis,CartesianGrid } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 
-import { marketData } from '../constants/dashboardData'
+// import { marketData } from '../constants/dashboardData'
+import { fetchMarketIndices } from '../api/market'
 
 const user = JSON.parse(localStorage.getItem('user'))
 const COLORS = ["#10B981", "#3B82F6", "#F59E0B"]
@@ -29,6 +30,10 @@ export default function PortfolioDashboard() {
   const [monthlyProfit, setMonthlyProfit] = useState(null)
   const [topAssets, setTopAssets] = useState([])
 
+  const [marketConditions, setMarketConditions] = useState([])
+  const [prevMarketConditions, setPrevMarketConditions] = useState([])
+  const [flashMap, setFlashMap] = useState({})
+
   useEffect(() => {
     if (!user) return
 
@@ -40,7 +45,43 @@ export default function PortfolioDashboard() {
 
     // 3️⃣ 股票 & 债券 Top 数据
     fetchTopAssets(5).then(setTopAssets)
+
+    // 初始加载
+    loadMarketData()
+
+    // 30 秒轮询
+    const timer = setInterval(() => {
+      loadMarketData()
+    }, 3000)
+
+    return () => clearInterval(timer)
   }, [])
+
+  // 🔄 加载 Market Data 并检测变化
+  const loadMarketData = async () => {
+    const newData = await fetchMarketIndices()
+
+    const newFlashMap = {}
+    newData.forEach((item, idx) => {
+      const prev = prevMarketConditions[idx]
+      if (prev) {
+        if (item.value > prev.value) {
+          newFlashMap[item.name] = "up"    // 上涨闪绿色
+        } else if (item.value < prev.value) {
+          newFlashMap[item.name] = "down"  // 下跌闪红色
+        }
+      }
+    })
+
+    setFlashMap(newFlashMap)
+    setPrevMarketConditions(newData)
+    setMarketConditions(newData)
+
+    // ⏳ 1.5 秒后移除闪烁
+    setTimeout(() => {
+      setFlashMap({})
+    }, 1500)
+  }
 
   // ⏳ Loading 状态
   if (!summary || !monthlyProfit) {
@@ -100,13 +141,7 @@ export default function PortfolioDashboard() {
       <header className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <div className="text-xl font-bold text-blue-600">Portfolio Manager</div>
-            <nav className="hidden md:flex space-x-6">
-              <a href="#" className="text-gray-600 hover:text-gray-900">Overview</a>
-              <a href="#" className="text-gray-600 hover:text-gray-900">Trading</a>
-              <a href="#" className="text-gray-600 hover:text-gray-900">Research</a>
-              <a href="#" className="text-gray-600 hover:text-gray-900">Reports</a>
-            </nav>
+            <div className="text-xl font-bold text-blue-600">Portfolio Manager 110101</div>
           </div>
           <div className="flex items-center space-x-4">
             <Button variant="ghost" size="icon"><Search className="h-4 w-4" /></Button>
@@ -128,9 +163,6 @@ export default function PortfolioDashboard() {
           <nav className="space-y-2">
             <a href="/dashboard" className="flex items-center space-x-3 text-blue-600 bg-blue-50 p-2 rounded-lg">
               <LayoutDashboard className="h-4 w-4" /><span>Dashboard</span>
-            </a>
-            <a href="/asset-detail" className="flex items-center space-x-3 text-gray-700 p-2 rounded-lg hover:bg-gray-100">
-              <FileText className="h-4 w-4" /><span>Asset Detail</span>
             </a>
             <a href="/profit-analysis" className="flex items-center space-x-3 text-gray-700 p-2 rounded-lg hover:bg-gray-100">
               <TrendingUp className="h-4 w-4" /><span>Profit Analysis</span>
@@ -215,8 +247,8 @@ export default function PortfolioDashboard() {
                     <div className="h-60 w-full">
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
-                          <Pie data={assetData} cx="50%" cy="50%" outerRadius={80} dataKey="value" 
-                          nameKey="name" label={(entry) => `${(entry.percent * 100).toFixed(1)}%`}>
+                          <Pie data={assetData} cx="50%" cy="50%" outerRadius={80} dataKey="value"
+                            nameKey="name" label={(entry) => `${(entry.percent * 100).toFixed(1)}%`}>
                             {assetData.map((entry, index) => (
                               <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                             ))}
@@ -239,15 +271,15 @@ export default function PortfolioDashboard() {
                           <XAxis dataKey="month" />
                           <YAxis />
                           <Tooltip formatter={(value) => value.toFixed(2)} />
-                            <Bar dataKey="profit">
-                              {profitTrendData.map((entry, index) => (
-                                <Cell
-                                  key={`cell-${index}`}
-                                  fill={entry.profit > 0 ? '#EF4444' : '#10B981'} // 红/绿
-                                />
-                              ))}  
-                            </Bar>
-                        </BarChart> 
+                          <Bar dataKey="profit">
+                            {profitTrendData.map((entry, index) => (
+                              <Cell
+                                key={`cell-${index}`}
+                                fill={entry.profit > 0 ? '#EF4444' : '#10B981'} // 红/绿
+                              />
+                            ))}
+                          </Bar>
+                        </BarChart>
                       </ResponsiveContainer>
                     </div>
                   </CardContent>
@@ -272,25 +304,36 @@ export default function PortfolioDashboard() {
                   <CardHeader><CardTitle>Market Conditions</CardTitle></CardHeader>
                   <CardContent>
                     <div className="space-y-3">
-                      {marketData.map((item, idx) => (
-                        <div key={idx} className="flex items-center justify-between">
-                          <span className="text-sm">{item.name}</span>
-                          <div className="flex items-center">
-                            <span className="text-sm font-medium">{item.value}</span>
-                            {item.change >= 0 ? (
-                              <>
-                                <ArrowUpRight className="h-3 w-3 text-red-600 ml-1" />
-                                <span className="text-xs text-red-600 ml-1">+{item.change}%</span>
-                              </>
-                            ) : (
-                              <>
-                                <ArrowDownRight className="h-3 w-3 text-green-600 ml-1" />
-                                <span className="text-xs text-green-600 ml-1">{item.change}%</span>
-                              </>
-                            )}
+                      {marketConditions.map((item, idx) => {
+                        const flashClass =
+                          flashMap[item.name] === "up"
+                            ? "bg-green-50 shadow-lg shadow-green-300"
+                            : flashMap[item.name] === "down"
+                              ? "bg-red-50 shadow-lg shadow-red-300"
+                              : ""
+                        return (
+                          <div
+                            key={idx}
+                            className={`flex items-center justify-between p-2 rounded transition-all duration-700 ease-in-out ${flashClass}`}
+                          >
+                            <span className="text-sm">{item.name}</span>
+                            <div className="flex items-center">
+                              <span className="text-sm font-medium">{item.value}</span>
+                              {item.change >= 0 ? (
+                                <>
+                                  <ArrowUpRight className="h-3 w-3 text-red-600 ml-1" />
+                                  <span className="text-xs text-red-600 ml-1">+{item.change}%</span>
+                                </>
+                              ) : (
+                                <>
+                                  <ArrowDownRight className="h-3 w-3 text-green-600 ml-1" />
+                                  <span className="text-xs text-green-600 ml-1">{item.change}%</span>
+                                </>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        )
+                      })}
                     </div>
                   </CardContent>
                 </Card>
