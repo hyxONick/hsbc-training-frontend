@@ -11,6 +11,7 @@ import {
   CartesianGrid, LineChart, Line, Cell
 } from "recharts";
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
+import { motion } from "framer-motion";
 import 'react-circular-progressbar/dist/styles.css';
 
 // ✅ 直接用你封装的 API
@@ -92,7 +93,7 @@ export default function MarketInformation() {
     };
 
     loadData();
-    // ⏳ 每 30 秒刷新一次
+    // ⏳ 每 3 秒刷新一次
     const interval = setInterval(loadData, 3000);
     return () => clearInterval(interval);
   }, []);
@@ -104,7 +105,7 @@ export default function MarketInformation() {
       {/* ✅ Header */}
       <header className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
-          <div className="text-xl font-bold text-blue-600">Portfolio Manager</div>
+          <div className="text-xl font-bold text-blue-600">Portfolio Manager 110101</div>
           <div className="flex items-center space-x-4">
             <Button variant="ghost" size="icon"><Search className="h-4 w-4" /></Button>
             <Button variant="ghost" size="icon"><Bell className="h-4 w-4" /></Button>
@@ -125,9 +126,6 @@ export default function MarketInformation() {
           <nav className="space-y-2">
             <a href="/dashboard" className="flex items-center space-x-3 text-gray-700 p-2 rounded-lg hover:bg-gray-100">
               <LayoutDashboard className="h-4 w-4" /><span>Dashboard</span>
-            </a>
-            <a href="/asset-detail" className="flex items-center space-x-3 text-gray-700 p-2 rounded-lg hover:bg-gray-100">
-              <FileText className="h-4 w-4" /><span>Asset Detail</span>
             </a>
             <a href="/profit-analysis" className="flex items-center space-x-3 text-gray-700 p-2 rounded-lg hover:bg-gray-100">
               <TrendingUp className="h-4 w-4" /><span>Profit Analysis</span>
@@ -163,7 +161,11 @@ export default function MarketInformation() {
                         <XAxis dataKey="range" />
                         <YAxis />
                         <Tooltip />
-                        <Bar dataKey="count">
+                        <Bar 
+                          dataKey="count" 
+                          isAnimationActive={true} 
+                          animationDuration={600}
+                        >
                           {histogram.map((entry, index) => (
                             <Cell
                               key={index}
@@ -175,9 +177,15 @@ export default function MarketInformation() {
                     </ResponsiveContainer>
                   </div>
 
-                  {/* Market Rating */}
+                  {/* Market Rating 动效 */}
                   <div className="col-span-12 md:col-span-4 flex flex-col items-center justify-center space-y-4">
-                    <div className="w-32 h-32">
+                    <motion.div
+                      key={marketRating.score}
+                      initial={{ scale: 1.1 }}
+                      animate={{ scale: 1 }}
+                      transition={{ duration: 1 }}
+                      className="w-32 h-32"
+                    >
                       <CircularProgressbar
                         value={marketRating.score * 20}
                         text={`${marketRating.score}`}
@@ -188,7 +196,7 @@ export default function MarketInformation() {
                           textSize: "20px"
                         })}
                       />
-                    </div>
+                    </motion.div>
                     <p className="text-center text-sm text-gray-600">{marketRating.suggestion}</p>
                   </div>
                 </div>
@@ -204,15 +212,33 @@ export default function MarketInformation() {
                   <CardHeader><CardTitle>Index Trends</CardTitle></CardHeader>
                   <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {indices.map((index, i) => (
-                      <div key={i} className="bg-white rounded shadow p-4">
+                      <motion.div 
+                        key={i} 
+                        className="bg-white rounded shadow p-4"
+                        initial={{ opacity: 0.4 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 1.2 }}
+                      >
                         <div className="flex justify-between mb-2">
                           <div>
                             <p className="text-sm font-medium">{index.name}</p>
-                            <p className={`text-xs ${index.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            <motion.p 
+                              key={index.change}
+                              initial={{ scale: 1.2 }}
+                              animate={{ scale: 1 }}
+                              className={`text-xs ${index.change >= 0 ? 'text-green-600' : 'text-red-600'}`}
+                            >
                               {index.change >= 0 ? '+' : ''}{index.change}%
-                            </p>
+                            </motion.p>
                           </div>
-                          <p className="text-right font-semibold">{index.value}</p>
+                          <motion.p 
+                            key={index.value}
+                            initial={{ scale: 1.1 }}
+                            animate={{ scale: 1 }}
+                            className="text-right font-semibold"
+                          >
+                            {index.value}
+                          </motion.p>
                         </div>
                         <ResponsiveContainer width="100%" height={80}>
                           <LineChart data={index.trend.map((val, idx) => ({ name: idx, value: val }))}>
@@ -221,7 +247,7 @@ export default function MarketInformation() {
                             <Tooltip />
                           </LineChart>
                         </ResponsiveContainer>
-                      </div>
+                      </motion.div>
                     ))}
                   </CardContent>
                 </Card>
@@ -248,10 +274,31 @@ export default function MarketInformation() {
                             <tr key={i} className="hover:bg-gray-50">
                               <td className="px-3 py-2 text-sm font-medium text-gray-900">{stock.symbol}</td>
                               <td className="px-3 py-2 text-sm text-gray-500">{stock.name}</td>
-                              <td className="px-3 py-2 text-sm text-gray-900">${stock.price.toFixed(2)}</td>
-                              <td className={`px-3 py-2 text-sm ${stock.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                {stock.change >= 0 ? '+' : ''}{stock.change}%
+                              
+                              {/* ✅ 价格动画 */}
+                              <td className="px-3 py-2 text-sm text-gray-900">
+                                <motion.span
+                                  key={stock.price}
+                                  initial={{ scale: 1.2, color: "#2563eb" }}
+                                  animate={{ scale: 1, color: "#111" }}
+                                  transition={{ duration: 1.2 }}
+                                >
+                                  ${stock.price.toFixed(2)}
+                                </motion.span>
                               </td>
+
+                              {/* ✅ 涨跌幅动画 */}
+                              <td className={`px-3 py-2 text-sm ${stock.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                <motion.span
+                                  key={stock.change}
+                                  initial={{ opacity: 0.3 }}
+                                  animate={{ opacity: 1 }}
+                                  transition={{ duration: 0.5 }}
+                                >
+                                  {stock.change >= 0 ? '+' : ''}{stock.change}%
+                                </motion.span>
+                              </td>
+
                               <td className={`px-3 py-2 text-sm ${stock.changeAmount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                                 {stock.changeAmount >= 0 ? '+' : ''}{stock.changeAmount.toFixed(2)}
                               </td>
@@ -287,10 +334,30 @@ export default function MarketInformation() {
                           <td className="px-4 py-2">{a.symbol}</td>
                           <td className="px-4 py-2">{a.name}</td>
                           <td className="px-4 py-2 capitalize">{a.type}</td>
-                          <td className="px-4 py-2">${a.price.toFixed(2)}</td>
-                          <td className={`px-4 py-2 ${a.changeAmount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                            {a.changeAmount >= 0 ? '+' : ''}{a.changeAmount?.toFixed(2) ?? '--'}
+                          
+                          {/* ✅ 资产价格动效 */}
+                          <td className="px-4 py-2">
+                            <motion.span
+                              key={a.price}
+                              initial={{ scale: 1.2 }}
+                              animate={{ scale: 1 }}
+                              transition={{ duration: 0.3 }}
+                            >
+                              ${a.price.toFixed(2)}
+                            </motion.span>
                           </td>
+
+                          <td className={`px-4 py-2 ${a.changeAmount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            <motion.span
+                              key={a.changeAmount}
+                              initial={{ opacity: 0.4 }}
+                              animate={{ opacity: 1 }}
+                              transition={{ duration: 0.3 }}
+                            >
+                              {a.changeAmount >= 0 ? '+' : ''}{a.changeAmount?.toFixed(2) ?? '--'}
+                            </motion.span>
+                          </td>
+
                           <td className={`px-4 py-2 ${a.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                             {a.change >= 0 ? '+' : ''}{a.change?.toFixed(2) ?? '--'}%
                           </td>
