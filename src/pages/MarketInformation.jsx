@@ -104,7 +104,7 @@ export default function MarketInformation() {
       {/* ✅ Header */}
       <header className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
-          <div className="text-xl font-bold text-blue-600">Portfolio Manager</div>
+          <div className="text-xl font-bold text-blue-600">Portfolio Manager 110101</div>
           <div className="flex items-center space-x-4">
             <Button variant="ghost" size="icon"><Search className="h-4 w-4" /></Button>
             <Button variant="ghost" size="icon"><Bell className="h-4 w-4" /></Button>
@@ -125,9 +125,6 @@ export default function MarketInformation() {
           <nav className="space-y-2">
             <a href="/dashboard" className="flex items-center space-x-3 text-gray-700 p-2 rounded-lg hover:bg-gray-100">
               <LayoutDashboard className="h-4 w-4" /><span>Dashboard</span>
-            </a>
-            <a href="/asset-detail" className="flex items-center space-x-3 text-gray-700 p-2 rounded-lg hover:bg-gray-100">
-              <FileText className="h-4 w-4" /><span>Asset Detail</span>
             </a>
             <a href="/profit-analysis" className="flex items-center space-x-3 text-gray-700 p-2 rounded-lg hover:bg-gray-100">
               <TrendingUp className="h-4 w-4" /><span>Profit Analysis</span>

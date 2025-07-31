@@ -100,13 +100,7 @@ export default function PortfolioDashboard() {
       <header className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <div className="text-xl font-bold text-blue-600">Portfolio Manager</div>
-            <nav className="hidden md:flex space-x-6">
-              <a href="#" className="text-gray-600 hover:text-gray-900">Overview</a>
-              <a href="#" className="text-gray-600 hover:text-gray-900">Trading</a>
-              <a href="#" className="text-gray-600 hover:text-gray-900">Research</a>
-              <a href="#" className="text-gray-600 hover:text-gray-900">Reports</a>
-            </nav>
+            <div className="text-xl font-bold text-blue-600">Portfolio Manager 110101</div>
           </div>
           <div className="flex items-center space-x-4">
             <Button variant="ghost" size="icon"><Search className="h-4 w-4" /></Button>
@@ -128,9 +122,6 @@ export default function PortfolioDashboard() {
           <nav className="space-y-2">
             <a href="/dashboard" className="flex items-center space-x-3 text-blue-600 bg-blue-50 p-2 rounded-lg">
               <LayoutDashboard className="h-4 w-4" /><span>Dashboard</span>
-            </a>
-            <a href="/asset-detail" className="flex items-center space-x-3 text-gray-700 p-2 rounded-lg hover:bg-gray-100">
-              <FileText className="h-4 w-4" /><span>Asset Detail</span>
             </a>
             <a href="/profit-analysis" className="flex items-center space-x-3 text-gray-700 p-2 rounded-lg hover:bg-gray-100">
               <TrendingUp className="h-4 w-4" /><span>Profit Analysis</span>
