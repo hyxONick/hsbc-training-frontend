@@ -133,22 +133,6 @@ export const stockQuotes = [
 ]
 
 
-export const allAssets = [
-  { symbol: 'AAPL', name: 'Apple Inc.', type: 'stock', price: 152.34, change: 1.2, changeAmount: 1.83 },
-  { symbol: 'MSFT', name: 'Microsoft Corp.', type: 'stock', price: 318.56, change: -0.8, changeAmount: -2.57 },
-  { symbol: 'GOOGL', name: 'Alphabet Inc.', type: 'stock', price: 125.67, change: 0.4, changeAmount: 0.50 },
-  { symbol: 'TSLA', name: 'Tesla Inc.', type: 'stock', price: 652.78, change: 3.1, changeAmount: 20.21 },
-  { symbol: 'NVDA', name: 'NVIDIA Corp.', type: 'stock', price: 842.12, change: 2.7, changeAmount: 22.74 },
-  { symbol: 'Bond A', name: 'US Treasury 10Y', type: 'bond', price: 98.50, change: 0.0, changeAmount: 0.0 },
-  { symbol: 'Bond B', name: 'Corporate Bond B', type: 'bond', price: 102.20, change: 0.0, changeAmount: 0.0 },
-  { symbol: 'Bond C', name: 'Municipal Bond C', type: 'bond', price: 101.75, change: 0.0, changeAmount: 0.0 },
-  { symbol: 'Bond D', name: 'Corporate Bond D', type: 'bond', price: 99.80, change: 0.0, changeAmount: 0.0 },
-  { symbol: 'Bond E', name: 'Bond ETF E', type: 'bond', price: 100.40, change: 0.0, changeAmount: 0.0 },
-  { symbol: 'META', name: 'Meta Platforms Inc.', type: 'stock', price: 340.12, change: -1.3, changeAmount: -3.95 },
-  { symbol: 'ORCL', name: 'Oracle Corp.', type: 'stock', price: 120.45, change: 0.0, changeAmount: 0.0 }
-];
-
-
 
 
 export function calculateMarketRating(histogram) {

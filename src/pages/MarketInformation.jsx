@@ -13,6 +13,8 @@ import {
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import { motion } from "framer-motion";
 import 'react-circular-progressbar/dist/styles.css';
+import { fetchUserPortfolios } from "../api/portfolio";
+import { createPortfolioItem } from "../api/portfolioItem";
 
 // ✅ 直接用你封装的 API
 import { 
@@ -21,6 +23,10 @@ import {
   fetchStockQuotes,
   fetchAllAssets
 } from "../api/market";   // ← 注意路径
+
+import{
+  fetchAllexistingAssets
+} from "../api/allasset.js"; // ← 注意路径
 
 // Y轴范围计算
 const getYAxisDomain = (data) => {
@@ -73,6 +79,13 @@ export default function MarketInformation() {
   const totalPages = Math.ceil(assets.length / itemsPerPage);
   const paginatedAssets = assets.slice((page - 1) * itemsPerPage, page * itemsPerPage);
 
+  const [stockId, setStockId] = useState("");
+  const [selectedPortfolio, setSelectedPortfolio] = useState("");
+  const [quantity, setQuantity] = useState("");
+  const [portfolios, setPortfolios] = useState([]);
+
+
+
   // ✅ 拉数据
   useEffect(() => {
     const loadData = async () => {
@@ -81,12 +94,16 @@ export default function MarketInformation() {
           fetchMarketIndices(),
           fetchRiseFallDistribution(),
           fetchStockQuotes(),
-          fetchAllAssets()
+          fetchAllexistingAssets()
         ]);
         setIndices(indicesData);
         setHistogram(riseFallData.histogram);
         setStocks(stocksData);
         setAssets(assetsData);
+
+        const portfolioData = await fetchUserPortfolios(user.id);
+        setPortfolios(portfolioData);
+        
       } catch (err) {
         console.error("❌ 加载市场信息失败:", err);
       }
@@ -324,45 +341,30 @@ export default function MarketInformation() {
                         <th className="px-4 py-2 text-left">Name</th>
                         <th className="px-4 py-2 text-left">Type</th>
                         <th className="px-4 py-2 text-left">Price</th>
-                        <th className="px-4 py-2 text-left">Change</th>
-                        <th className="px-4 py-2 text-left">Change%</th>
                       </tr>
                     </thead>
                     <tbody>
                       {paginatedAssets.map((a, i) => (
-                        <tr key={i} className="hover:bg-gray-50">
-                          <td className="px-4 py-2">{a.symbol}</td>
-                          <td className="px-4 py-2">{a.name}</td>
-                          <td className="px-4 py-2 capitalize">{a.type}</td>
-                          
-                          {/* ✅ 资产价格动效 */}
-                          <td className="px-4 py-2">
-                            <motion.span
-                              key={a.price}
-                              initial={{ scale: 1.2 }}
-                              animate={{ scale: 1 }}
-                              transition={{ duration: 0.3 }}
-                            >
-                              ${a.price.toFixed(2)}
-                            </motion.span>
-                          </td>
+                      <tr key={i} className="hover:bg-gray-50">
+                        <td className="px-4 py-2">{a.assetCode}</td>
+                        <td className="px-4 py-2">{a.name}</td>
+                        <td className="px-4 py-2 capitalize">{a.assetType}</td>
 
-                          <td className={`px-4 py-2 ${a.changeAmount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                            <motion.span
-                              key={a.changeAmount}
-                              initial={{ opacity: 0.4 }}
-                              animate={{ opacity: 1 }}
-                              transition={{ duration: 0.3 }}
-                            >
-                              {a.changeAmount >= 0 ? '+' : ''}{a.changeAmount?.toFixed(2) ?? '--'}
-                            </motion.span>
-                          </td>
+                        <td className="px-4 py-2">
+                          <motion.span
+                            key={a.assetCode}
+                            initial={{ scale: 1.2 }}
+                            animate={{ scale: 1 }}
+                            transition={{ duration: 0.3 }}
+                          >
+                            ${a.price ? Number(a.price).toFixed(2) : '--'}
+                          </motion.span>
+                        </td>
 
-                          <td className={`px-4 py-2 ${a.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                            {a.change >= 0 ? '+' : ''}{a.change?.toFixed(2) ?? '--'}%
-                          </td>
-                        </tr>
-                      ))}
+                    
+                      </tr>
+                    ))}
+
                     </tbody>
                   </table>
 
@@ -383,6 +385,88 @@ export default function MarketInformation() {
                 </div>
               </CardContent>
             </Card>
+            {/* 横向购买表单区域 */}
+              <div className="mt-6 p-4 border rounded bg-white shadow flex items-center gap-4">
+                <input
+                  type="text"
+                  placeholder="Asset ID (e.g. AAPL)"
+                  className="border px-3 py-2 rounded w-40"
+                  value={stockId}
+                  onChange={(e) => setStockId(e.target.value.toUpperCase())}
+                />
+
+                <select
+                  className="border px-3 py-2 rounded w-40"
+                  value={selectedPortfolio}
+                  onChange={(e) => setSelectedPortfolio(e.target.value)}
+                >
+                  <option value="">Choose Portfolio</option>
+                  {portfolios.map((p) => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+
+                </select>
+
+                <input
+                  type="number"
+                  placeholder="number"
+                  className="border px-3 py-2 rounded w-24"
+                  value={quantity}
+                  onChange={(e) => setQuantity(e.target.value)}
+                />
+
+                <button
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+                  onClick={async () => {
+                    if (!stockId || !selectedPortfolio || !quantity) {
+                      alert("please fill all fields");
+                      return;
+                    }
+
+                    const asset = assets.find(a => a.assetCode === stockId);
+                    if (!asset) {
+                      alert("Invalid asset symbol");
+                      return;
+                    }
+
+                    const payload = {
+                      portfolioId: parseInt(selectedPortfolio),  // portfolioId 是数字
+                      assetCode: stockId,                        // 股票代码
+                      assetType: asset.assetType,                     // 类型如 'stock'
+                      amount: Number((asset.price * quantity).toFixed(2)),  // 精确到小数点后两位
+                      quantity: parseInt(quantity),              // 数量
+                      type: "buy",
+                      purchaseDate: new Date().toISOString().split("T")[0], // 格式 '2025-07-31'
+                    };
+                    console.log(payload);
+
+                    try {
+                            const result = await createPortfolioItem(payload);
+                            alert("✅ Purchase successful!");
+                            console.log("✅ API response:", result);
+                          } catch (error) {
+                            console.error("❌ API error:", error);
+  
+                          // 🚨 打印详细响应内容（重点）
+                          if (error.response) {
+                            console.error("🔍 Response data:", error.response.data);
+                            console.error("🔍 Response status:", error.response.status);
+                            console.error("🔍 Response headers:", error.response.headers);
+                            alert("❌ " + (error.response.data.message || "Server Error"));
+                          } else if (error.request) {
+                            console.error("❌ No response received:", error.request);
+                            alert("❌ No response from server");
+                          } else {
+                            console.error("❌ Error in setup:", error.message);
+                            alert("❌ Unexpected error");
+                          }
+                        }
+                  }}
+
+                >
+                  BUY
+                </button>
+              </div>
 
           </div>
         </main>
