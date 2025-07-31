@@ -58,7 +58,7 @@ export default function Kline() {
       <header className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <div className="text-xl font-bold text-blue-600">Portfolio Manager</div>
+            <div className="text-xl font-bold text-blue-600">Portfolio Manager 110101</div>
           </div>
           <div className="flex items-center space-x-4">
             <Button variant="ghost" size="icon"><Search className="h-4 w-4" /></Button>
@@ -80,9 +80,6 @@ export default function Kline() {
           <nav className="space-y-2">
             <a href="/dashboard" className="flex items-center space-x-3 text-gray-700 p-2 rounded-lg hover:bg-gray-100">
               <LayoutDashboard className="h-4 w-4" /><span>Dashboard</span>
-            </a>
-            <a href="/asset-detail" className="flex items-center space-x-3 text-gray-700 p-2 rounded-lg hover:bg-gray-100">
-              <Briefcase className="h-4 w-4" /><span>Asset Detail</span>
             </a>
             <a href="/profit-analysis" className="flex items-center space-x-3 text-gray-700 p-2 rounded-lg hover:bg-gray-100">
               <TrendingUp className="h-4 w-4" /><span>Profit Analysis</span>
@@ -111,20 +108,20 @@ export default function Kline() {
               {isUp ? "+" : ""}{changeAmount} ({isUp ? "+" : ""}{changePercent}%)
             </span>
           </div>
-          <p className="text-gray-500">资产类型: {assetType} | 最新更新: {new Date(assetData.updatedAt).toLocaleString()}</p>
+          <p className="text-gray-500">Asset Type: {assetType} | Last Updated: {new Date(assetData.updatedAt).toLocaleString()}</p>
 
           {/* ✅ 指标卡片 */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
             <Card>
-              <CardHeader><CardTitle>52周最高</CardTitle></CardHeader>
+              <CardHeader><CardTitle>52-Week High</CardTitle></CardHeader>
               <CardContent><p className="text-green-600 font-semibold">{currency} {high52w}</p></CardContent>
             </Card>
             <Card>
-              <CardHeader><CardTitle>52周最低</CardTitle></CardHeader>
+              <CardHeader><CardTitle>52-Week Low</CardTitle></CardHeader>
               <CardContent><p className="text-red-600 font-semibold">{currency} {low52w}</p></CardContent>
             </Card>
             <Card>
-              <CardHeader><CardTitle>平均价格</CardTitle></CardHeader>
+              <CardHeader><CardTitle>Average Price</CardTitle></CardHeader>
               <CardContent><p className="text-gray-700 font-semibold">{currency} {avgPrice}</p></CardContent>
             </Card>
           </div>

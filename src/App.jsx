@@ -22,7 +22,6 @@ function App() {
       <Route path="/dashboard" element={isLoggedIn ? <PortfolioDashboard /> : <Navigate to="/login" />} />
       <Route path="/market-information" element={isLoggedIn ? <MarketInformation /> : <Navigate to="/login" />} />
       <Route path="/settings" element={isLoggedIn ? <Settings /> : <Navigate to="/login" />} />
-      <Route path="/asset-detail" element={isLoggedIn ? <AssetDetail /> : <Navigate to="/login" />} />
       <Route path="/profit-analysis" element={isLoggedIn ? <ProfitAnalysis /> : <Navigate to="/login" />} />
       <Route path="/portfolio-detail" element={isLoggedIn ? <PortfolioDetail /> : <Navigate to="/login" />} />
       <Route path="/kline/:assetCode" element={isLoggedIn ? <Kline /> : <Navigate to="/login" />} />
